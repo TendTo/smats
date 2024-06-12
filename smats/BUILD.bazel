@@ -1,0 +1,35 @@
+load("//tools:cpplint.bzl", "cpplint")
+load("//tools:rules_cc.bzl", "SMATS_NAME", "SMATS_VERSION", "smats_cc_binary", "smats_cc_library", "smats_srcs")
+
+smats_srcs(
+    name = "srcs",
+    deps = ["//smats/util:all_srcs"],
+)
+
+genrule(
+    name = "generate_version_header",
+    outs = ["version.h"],
+    cmd = "$(location //tools:generate_version_header) %s %s > $@" % (SMATS_NAME, SMATS_VERSION),
+    cmd_bat = "$(location //tools:generate_version_header.bat) %s %s $@" % (SMATS_NAME, SMATS_VERSION),
+    stamp = True,
+    tools = [
+        "//tools:generate_version_header",
+        "//tools:generate_version_header.bat",
+    ],
+)
+
+smats_cc_library(
+    name = "version",
+    hdrs = [":generate_version_header"],
+)
+
+smats_cc_binary(
+    name = "smats",
+    srcs = ["main.cpp"],
+    deps = [
+        ":version",
+        "@fmt",
+    ],
+)
+
+cpplint()
