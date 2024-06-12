@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# This script generates a version header file for myapp.
+# This script generates a version header file for smats.
 # It is called from the Bazel build system, and uses some information
 # about the workspace provided by Bazel in the file bazel-out/stable-status.txt.
 # Usage: ./tools/generate_version_header.sh [NAME] [VERSION]
@@ -16,12 +16,12 @@ REPOSITORY_STATUS="$(grep '^STABLE_REPOSITORY_STATUS ' bazel-out/stable-status.t
 cat <<EOF
 #pragma once
 
-#define MYAPP_PROGRAM_NAME    "${NAME}"
-#define MYAPP_VERSION_STRING  "${VERSION}"
-#define MYAPP_VERSION_FULL     ${VERSION}
-#define MYAPP_VERSION_MAJOR    ${MAJOR}
-#define MYAPP_VERSION_MINOR    ${MINOR}
-#define MYAPP_VERSION_REVISION ${REVISION}
-#define MYAPP_VERSION_REPOSTAT "${REPOSITORY_STATUS}"
+#define SMATS_PROGRAM_NAME    "${NAME}"
+#define SMATS_VERSION_STRING  "${VERSION}"
+#define SMATS_VERSION_FULL     ${VERSION}
+#define SMATS_VERSION_MAJOR    ${MAJOR}
+#define SMATS_VERSION_MINOR    ${MINOR}
+#define SMATS_VERSION_REVISION ${REVISION}
+#define SMATS_VERSION_REPOSTAT "${REPOSITORY_STATUS}"
 
 EOF

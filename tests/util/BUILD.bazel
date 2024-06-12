@@ -1,16 +1,25 @@
-"""Tests for the util submodule."""
+load("//tools:rules_cc.bzl", "smats_cc_googletest")
 
-load("//tools:rules_cc.bzl", "myapp_cc_googletest")
-
-# Since we are using the myapp_cc_googletest rule, a lot of the boilerplate
-# is taken care of for us.
-# If src is not specified, the rule will look for a file named TestCalculator.cpp
-# in the same directory as the BUILD file.
-# It will also automatically add the calculator tag to the test to allow filtering.
-# More tags can be added manually if needed.
-# See //tools:myapp.bzl > myapp_cc_googletest for more information.
-myapp_cc_googletest(
-    name = "test_calculator",
+smats_cc_googletest(
+    name = "test_logging",
     tags = ["util"],
-    deps = ["//myapp/util:calculator"],
+    deps = ["//smats/util:logging"],
+)
+
+smats_cc_googletest(
+    name = "test_exception",
+    tags = ["util"],
+    deps = ["//smats/util:exception"],
+)
+
+smats_cc_googletest(
+    name = "test_timer",
+    tags = ["util"],
+    deps = ["//smats/util:timer"],
+)
+
+smats_cc_googletest(
+    name = "test_hash",
+    tags = ["util"],
+    deps = ["//smats/util:hash"],
 )

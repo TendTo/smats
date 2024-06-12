@@ -1,18 +1,18 @@
 load("@doxygen//:doxygen.bzl", "doxygen")
-load("//tools:rules_cc.bzl", "MYAPP_VERSION", "MYAPP_NAME")
+load("//tools:rules_cc.bzl", "SMATS_VERSION", "SMATS_NAME")
 
 doxygen(
     name = "docs",
     srcs = [
         "//:README.md",
-        "//myapp:all_srcs",
+        "//smats:all_srcs",
     ],
     configurations = [
-        "INPUT = . myapp myapp/util",
+        "INPUT = . smats smats/util",
         "ALIASES = \"licence=@par Licence:^^\"",
-        "PROJECT_NUMBER = %s" % MYAPP_VERSION,
+        "PROJECT_NUMBER = %s" % SMATS_VERSION,
         "USE_MDFILE_AS_MAINPAGE = README.md",
     ],
-    project_brief = "MyApp is a simple application",
-    project_name = MYAPP_NAME
+    project_brief = "Satisfability Modulo Arithmetic Theories Symbols (Smats) provides a simple to use symbolic representation of arithmetic expressions for SMT (Satisfiability Modulo Theories) solvers.",
+    project_name = SMATS_NAME
 )

@@ -5,8 +5,8 @@ Inspired by Drake's drake.bzl file https://github.com/RobotLocomotion/drake/blob
 
 load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
 
-MYAPP_NAME = "myapp"
-MYAPP_VERSION = "0.0.1"
+SMATS_NAME = "smats"
+SMATS_VERSION = "0.0.1"
 
 # The CXX_FLAGS will be enabled for all C++ rules in the project
 # building with any linux compiler.
@@ -69,7 +69,7 @@ MSVC_CL_TEST_FLAGS = []
 CLANG_CL_TEST_FLAGS = []
 
 # Default defines for all C++ rules in the project.
-MYAPP_DEFINES = []
+SMATS_DEFINES = []
 
 def _get_copts(rule_copts, cc_test = False):
     """Alter the provided rule specific copts, adding the platform-specific ones.
@@ -101,7 +101,7 @@ def _get_defines(rule_defines):
     Returns:
         A list of defines.
     """
-    return rule_defines + MYAPP_DEFINES + select({
+    return rule_defines + SMATS_DEFINES + select({
         "//tools:debug_build": [],
         "//conditions:default": [],
     }) + select({
@@ -143,7 +143,7 @@ def _get_features(rule_features):
         "//conditions:default": [],
     })
 
-def myapp_cc_library(
+def smats_cc_library(
         name,
         hdrs = None,
         srcs = None,
@@ -178,7 +178,7 @@ def myapp_cc_library(
         **kwargs
     )
 
-def myapp_cc_binary(
+def smats_cc_binary(
         name,
         srcs = None,
         deps = None,
@@ -210,7 +210,7 @@ def myapp_cc_binary(
         **kwargs
     )
 
-def myapp_cc_test(
+def smats_cc_test(
         name,
         srcs = None,
         copts = [],
@@ -219,11 +219,11 @@ def myapp_cc_test(
         **kwargs):
     """Creates a rule to declare a C++ unit test.
 
-    Note that for almost all cases, myapp_cc_googletest should be used instead of this rule.
+    Note that for almost all cases, smats_cc_googletest should be used instead of this rule.
 
     By default, sets size="small" because that indicates a unit test.
     If a list of srcs is not provided, it will be inferred from the name, by capitalizing each _-separated word and appending .cpp.
-    For example, myapp_cc_test(name = "test_foo_bar") will look for TestFooBar.cpp.
+    For example, smats_cc_test(name = "test_foo_bar") will look for TestFooBar.cpp.
     Furthermore, a tag will be added for the test, based on the name, by converting the name to lowercase and removing the "test_" prefix.
 
     Args:
@@ -241,12 +241,12 @@ def myapp_cc_test(
         srcs = srcs,
         copts = _get_copts(copts, cc_test = True),
         linkstatic = True,
-        tags = tags + ["myapp", "".join([word.lower() for word in name.split("_")][1:])],
+        tags = tags + ["smats", "".join([word.lower() for word in name.split("_")][1:])],
         defines = _get_defines(defines),
         **kwargs
     )
 
-def myapp_cc_googletest(
+def smats_cc_googletest(
         name,
         srcs = None,
         deps = None,
@@ -264,7 +264,7 @@ def myapp_cc_googletest(
     By default, it uses use_default_main=True to use GTest's main, via @googletest//:gtest_main.
     If use_default_main is False, it will depend on @googletest//:gtest instead.
     If a list of srcs is not provided, it will be inferred from the name, by capitalizing each _-separated word and appending .cpp.
-    For example, myapp_cc_test(name = "test_foo_bar") will look for TestFooBar.cpp.
+    For example, smats_cc_test(name = "test_foo_bar") will look for TestFooBar.cpp.
     Furthermore, a tag will be added for the test, based on the name, by converting the name to lowercase and removing the "test_" prefix.
 
     Args:
@@ -275,7 +275,7 @@ def myapp_cc_googletest(
         tags: A list of tags to add to the test. Allows for test filtering.
         use_default_main: Whether to use googletest's main.
         defines: A list of compiler defines used when compiling this target.
-        **kwargs: Additional arguments to pass to myapp_cc_test.
+        **kwargs: Additional arguments to pass to smats_cc_test.
     """
     if deps == None:
         deps = []
@@ -288,7 +288,7 @@ def myapp_cc_googletest(
         deps.append("@googletest//:gtest_main")
     else:
         deps.append("@googletest//:gtest")
-    myapp_cc_test(
+    smats_cc_test(
         name = name,
         srcs = srcs,
         deps = deps,
@@ -298,7 +298,7 @@ def myapp_cc_googletest(
         **kwargs
     )
 
-def myapp_srcs(name, srcs = None, hdrs = None, deps = [], visibility = ["//visibility:public"]):
+def smats_srcs(name, srcs = None, hdrs = None, deps = [], visibility = ["//visibility:public"]):
     """Returns three different lists of source files based on the name.
 
     Args:

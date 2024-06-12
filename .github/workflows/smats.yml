@@ -1,15 +1,15 @@
-name: myapp CI
+name: smats CI
 
 on:
   push:
     branches: [main]
     paths:
-      - "myapp/**"
+      - "smats/**"
       - "test/**"
   pull_request:
     branches: [main]
     paths:
-      - "myapp/**"
+      - "smats/**"
       - "test/**"
   workflow_dispatch:
 
@@ -36,7 +36,7 @@ jobs:
             ${{ runner.os }}-bazel-
 
       - name: Build
-        run: bazel build //myapp
+        run: bazel build //smats
 
   lint:
     strategy:
@@ -64,7 +64,7 @@ jobs:
             ${{ runner.os }}-bazel-
 
       - name: Lint
-        run: bazel test //myapp/...
+        run: bazel test //smats/...
 
   test:
     strategy:

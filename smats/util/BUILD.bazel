@@ -1,0 +1,64 @@
+load("//tools:cpplint.bzl", "cpplint")
+load("//tools:rules_cc.bzl", "smats_cc_library", "smats_srcs")
+
+package(default_visibility = [
+    "//smats:__subpackages__",
+    "//tests:__subpackages__",
+])
+
+smats_srcs(name = "srcs")
+
+smats_cc_library(
+    name = "exception",
+    hdrs = ["exception.h"],
+    deps = [
+        ":logging",
+        "@fmt",
+    ],
+)
+
+smats_cc_library(
+    name = "logging",
+    srcs = ["logging.cpp"],
+    hdrs = ["logging.h"],
+    deps = [
+        "@fmt",
+        "@spdlog",
+    ],
+)
+
+smats_cc_library(
+    name = "stats",
+    srcs = ["stats.cpp"],
+    hdrs = ["stats.h"],
+    implementation_deps = [":logging"],
+    deps = [":timer"],
+)
+
+smats_cc_library(
+    name = "timer",
+    srcs = ["timer.cpp"],
+    hdrs = ["timer.h"],
+    implementation_deps = [":logging"],
+)
+
+smats_cc_library(
+    name = "definitions",
+    hdrs = ["definitions.h"],
+)
+
+smats_cc_library(
+    name = "concepts",
+    hdrs = ["concepts.h"],
+)
+
+smats_cc_library(
+    name = "hash",
+    hdrs = ["hash.hpp"],
+    deps = [
+        ":concepts",
+        ":exception",
+    ],
+)
+
+cpplint()

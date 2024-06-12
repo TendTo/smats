@@ -11,7 +11,7 @@ exports_files(["generate_version_header.bat"])
 #
 # Pass them to bazel with --//tools:<flag>=<value>
 # Example:
-# bazel build //myapp:main --//tools:enable_dynamic_build=True
+# bazel build //smats:main --//tools:enable_dynamic_build=True
 ######################################################################################
 
 bool_flag(

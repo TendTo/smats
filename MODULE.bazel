@@ -1,6 +1,6 @@
-"""myapp module"""
+"""smats module"""
 
-module(name = "myapp")
+module(name = "smats")
 
 #################################################################################
 # Available dependencies from the Bazel registry (https://registry.bazel.build/)

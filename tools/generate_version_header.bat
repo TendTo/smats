@@ -23,11 +23,11 @@ for /f "tokens=2*" %%a in ('findstr /b /c:"STABLE_REPOSITORY_STATUS " bazel-out\
 REM Print version header
 (
 echo #pragma once
-echo #define MYAPP_PROGRAM_NAME    "%NAME%"
-echo #define MYAPP_VERSION_STRING  "%VERSION%"
-echo #define MYAPP_VERSION_FULL     %VERSION%
-echo #define MYAPP_VERSION_MAJOR    %MAJOR%
-echo #define MYAPP_VERSION_MINOR    %MINOR%
-echo #define MYAPP_VERSION_REVISION %REVISION%
-echo #define MYAPP_VERSION_REPOSTAT "%REPOSITORY_STATUS%"
+echo #define SMATS_PROGRAM_NAME    "%NAME%"
+echo #define SMATS_VERSION_STRING  "%VERSION%"
+echo #define SMATS_VERSION_FULL     %VERSION%
+echo #define SMATS_VERSION_MAJOR    %MAJOR%
+echo #define SMATS_VERSION_MINOR    %MINOR%
+echo #define SMATS_VERSION_REVISION %REVISION%
+echo #define SMATS_VERSION_REPOSTAT "%REPOSITORY_STATUS%"
 ) > "%~3"

@@ -1,6 +1,6 @@
 .git
 bazel-bin
-bazel-myapp
+bazel-smats
 bazel-out
 bazel-testlogs
 bazel-win-bazel
