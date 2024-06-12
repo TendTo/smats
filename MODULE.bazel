@@ -1,0 +1,42 @@
+"""myapp module"""
+
+module(name = "myapp")
+
+#################################################################################
+# Available dependencies from the Bazel registry (https://registry.bazel.build/)
+#################################################################################
+
+# rules_cc for building C++ libraries with Bazel
+bazel_dep(name = "rules_cc", version = "0.0.9")
+# Utility rules for Bazel
+bazel_dep(name = "bazel_skylib", version = "1.5.0")
+# argparse implementation for modern C++
+bazel_dep(name = "argparse", version = "3.0.0")
+# C++ library for formatting strings
+bazel_dep(name = "fmt", version = "10.2.1")
+# Google C++ Style Guide
+bazel_dep(name = "cpplint", version = "1.6.1", dev_dependency = True)
+# C++ test suite by Google
+bazel_dep(name = "googletest", version = "1.14.0", dev_dependency = True)
+# Doxygen documentation generator
+bazel_dep(name = "rules_doxygen", version = "1.1.0", dev_dependency = True)
+
+#################################################################################
+# External dependencies not available in the Bazel registry
+#################################################################################
+github_archive = use_repo_rule("//tools:git_archive.bzl", "github_archive")
+
+# Logging library
+github_archive(
+    name = "spdlog",
+    build_file = "//third_party:spdlog.BUILD.bazel",  # custom build file
+    commit = "v1.12.0",
+    repository = "gabime/spdlog",
+    sha256 = "4dccf2d10f410c1e2feaff89966bfc49a1abb29ef6f08246335b110e001e09a9",
+)
+
+#################################################################################
+# Load module extensions
+#################################################################################
+doxygen_extension = use_extension("@rules_doxygen//:extensions.bzl", "doxygen_extension")
+use_repo(doxygen_extension, "doxygen")

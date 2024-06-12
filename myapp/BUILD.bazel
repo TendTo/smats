@@ -1,0 +1,36 @@
+load("//tools:cpplint.bzl", "cpplint")
+load("//tools:rules_cc.bzl", "MYAPP_NAME", "MYAPP_VERSION", "myapp_cc_binary", "myapp_cc_library", "myapp_srcs")
+
+myapp_srcs(
+    name = "srcs",
+    deps = ["//myapp/util:all_srcs"],
+)
+
+genrule(
+    name = "generate_version_header",
+    outs = ["version.h"],
+    cmd = "$(location //tools:generate_version_header) %s %s > $@" % (MYAPP_NAME, MYAPP_VERSION),
+    cmd_bat = "$(location //tools:generate_version_header.bat) %s %s $@" % (MYAPP_NAME, MYAPP_VERSION),
+    stamp = True,
+    tools = [
+        "//tools:generate_version_header",
+        "//tools:generate_version_header.bat",
+    ],
+)
+
+myapp_cc_library(
+    name = "version",
+    hdrs = [":generate_version_header"],
+)
+
+myapp_cc_binary(
+    name = "myapp",
+    srcs = ["main.cpp"],
+    deps = [
+        ":version",
+        "//myapp/util:calculator",
+        "@fmt",
+    ],
+)
+
+cpplint()

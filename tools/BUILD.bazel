@@ -1,0 +1,86 @@
+"""A BUILD file providing the configuration for the project."""
+
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
+
+package(default_visibility = ["//visibility:public"])
+
+exports_files(["generate_version_header.bat"])
+
+######################################################################################
+# Custom flags that control build behavior
+#
+# Pass them to bazel with --//tools:<flag>=<value>
+# Example:
+# bazel build //myapp:main --//tools:enable_dynamic_build=True
+######################################################################################
+
+bool_flag(
+    name = "enable_dynamic_build",
+    build_setting_default = False,
+)
+
+bool_flag(
+    name = "enable_static_build",
+    build_setting_default = False,
+)
+
+###########################################
+# Configuration settings
+###########################################
+
+config_setting(
+    name = "dynamic_build",
+    flag_values = {":enable_dynamic_build": "True"},
+)
+
+config_setting(
+    name = "static_build",
+    flag_values = {":enable_static_build": "True"},
+)
+
+config_setting(
+    name = "clang_build",
+    flag_values = {
+        "@bazel_tools//tools/cpp:compiler": "clang",
+    },
+)
+
+config_setting(
+    name = "gcc_build",
+    flag_values = {
+        "@bazel_tools//tools/cpp:compiler": "gcc",
+    },
+)
+
+config_setting(
+    name = "msvc_cl_build",
+    flag_values = {
+        "@bazel_tools//tools/cpp:compiler": "msvc-cl",
+    },
+)
+
+config_setting(
+    name = "clang_cl_build",
+    flag_values = {
+        "@bazel_tools//tools/cpp:compiler": "clang-cl",
+    },
+)
+
+config_setting(
+    name = "debug_build",
+    values = {"compilation_mode": "dbg"},
+)
+
+config_setting(
+    name = "release_build",
+    values = {"compilation_mode": "opt"},
+)
+
+###########################################
+# Version header script
+###########################################
+
+sh_binary(
+    name = "generate_version_header",
+    srcs = ["generate_version_header.sh"],
+)

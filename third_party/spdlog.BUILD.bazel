@@ -1,0 +1,34 @@
+"""spdlog library for Bazel"""
+
+load("@rules_cc//cc:defs.bzl", "cc_library")
+
+licenses(["notice"])  # MIT
+
+package(default_visibility = ["//visibility:public"])
+
+cc_library(
+    name = "spdlog",
+    srcs = [
+        "src/async.cpp",
+        "src/cfg.cpp",
+        "src/color_sinks.cpp",
+        "src/file_sinks.cpp",
+        "src/spdlog.cpp",
+        "src/stdout_sinks.cpp",
+    ],
+    hdrs = glob(["include/**/*.h"]),
+    defines = [
+        "SPDLOG_FMT_EXTERNAL",
+        "SPDLOG_COMPILED_LIB",
+    ],
+    includes = ["include"],
+    deps = ["@fmt"],
+)
+
+cc_library(
+    name = "spdlog_hdrs",
+    hdrs = glob(["include/**/*.h"]),
+    defines = ["SPDLOG_FMT_EXTERNAL"],
+    includes = ["include"],
+    deps = ["@fmt"],
+)

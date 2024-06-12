@@ -1,0 +1,8 @@
+.git
+bazel-bin
+bazel-myapp
+bazel-out
+bazel-testlogs
+bazel-win-bazel
+.clwb
+.vscode

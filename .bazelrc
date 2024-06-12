@@ -1,0 +1,17 @@
+# Workspace status command
+build --enable_platform_specific_config
+build --experimental_cc_shared_library
+
+# Flag aliases
+build --flag_alias=enable_static_build=//tools:enable_static_build
+build --flag_alias=enable_dynamic_build=//tools:enable_dynamic_build
+
+# Default build
+build:windows --cxxopt=/std:c++20
+build:windows --workspace_status_command=tools/workspace_status.bat
+
+build:linux --cxxopt=-std=c++20
+build:linux --workspace_status_command=tools/workspace_status.sh
+
+build:macos --cxxopt=-std=c++20
+build:macos --workspace_status_command=tools/workspace_status.sh
