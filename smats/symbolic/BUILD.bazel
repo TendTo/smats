@@ -1,0 +1,42 @@
+load("//tools:cpplint.bzl", "cpplint")
+load("//tools:rules_cc.bzl", "smats_cc_library", "smats_srcs")
+
+package(default_visibility = [
+    "//smats:__subpackages__",
+    "//tests:__subpackages__",
+])
+
+smats_srcs(name = "srcs")
+
+smats_cc_library(
+    name = "variable",
+    srcs = ["variable.cpp"],
+    hdrs = ["variable.h"],
+    implementation_deps = ["//smats/util:exception"],
+    deps = ["//smats/util:hash"],
+)
+
+smats_cc_library(
+    name = "variables",
+    srcs = ["variables.cpp"],
+    hdrs = ["variables.h"],
+    implementation_deps = ["//smats/util:exception"],
+    deps = [
+        ":variable",
+        "//smats/util:hash",
+    ],
+)
+
+smats_cc_library(
+    name = "environment",
+    srcs = ["environment.cpp"],
+    hdrs = ["environment.h"],
+    implementation_deps = ["//smats/util:exception"],
+    deps = [
+        ":variable",
+        ":variables",
+        "//smats/lib:gmp",
+    ],
+)
+
+cpplint()

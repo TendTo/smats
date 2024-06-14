@@ -1,0 +1,67 @@
+load("//tools:rules_cc.bzl", "smats_cc_googletest")
+
+# smats_cc_googletest(
+#     name = "test_if_then_else_eliminator",
+#     tags = ["symbolic"],
+#     deps = ["//smats/symbolic:if_then_else_eliminator"],
+# )
+
+# smats_cc_googletest(
+#     name = "test_nnfizer",
+#     tags = ["symbolic"],
+#     deps = ["//smats/symbolic:nnfizier"],
+# )
+
+# smats_cc_googletest(
+#     name = "test_symbolic",
+#     tags = ["symbolic"],
+#     deps = ["//smats/symbolic"],
+# )
+
+# smats_cc_googletest(
+#     name = "test_prefix_printer",
+#     tags = ["symbolic"],
+#     deps = ["//smats/symbolic:prefix_printer"],
+# )
+
+# smats_cc_googletest(
+#     name = "test_predicate_abstractor",
+#     tags = ["symbolic"],
+#     deps = ["//smats/symbolic:predicate_abstractor"],
+# )
+
+# smats_cc_googletest(
+#     name = "test_plaisted_greenbaum_cnfizer",
+#     tags = ["symbolic"],
+#     deps = ["//smats/symbolic:plaisted_greenbaum_cnfizer"],
+# )
+
+# smats_cc_googletest(
+#     name = "test_tseitin_cnfizer",
+#     tags = ["symbolic"],
+#     deps = ["//smats/symbolic:tseitin_cnfizer"],
+# )
+
+smats_cc_googletest(
+    name = "test_variable",
+    tags = ["symbolic"],
+    deps = ["//smats/symbolic:variable"],
+)
+
+smats_cc_googletest(
+    name = "test_variables",
+    tags = ["symbolic"],
+    deps = ["//smats/symbolic:variables"],
+)
+
+smats_cc_googletest(
+    name = "test_environment",
+    tags = ["symbolic"],
+    deps = ["//smats/symbolic:environment"],
+)
+
+# smats_cc_googletest(
+#     name = "test_expression_cell",
+#     tags = ["symbolic"],
+#     deps = ["//smats/symbolic:expression_cell"],
+# )

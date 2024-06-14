@@ -39,15 +39,15 @@
  *
  * Some types may also choose to specialize `std::hash<MyValue>` to use `DefaultHash`,
  * so that the second template argument to `std::unordered_set` can be omitted.
- * For example @ref smats::symbolic::Expression header states:
+ * For example @ref smats::Expression header states:
  * @code
  * namespace std {
- * struct hash<smats::symbolic::Expression> : public smats::DefaultHash {};
+ * struct hash<smats::Expression> : public smats::DefaultHash {};
  * }  // namespace std
  * @endcode
  * so that users are able to simply write:
  * @code
- * std::unordered_set<smats::symbolic::Expression> foo;
+ * std::unordered_set<smats::Expression> foo;
  * @endcode
  */
 #pragma once
