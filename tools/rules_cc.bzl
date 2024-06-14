@@ -222,9 +222,9 @@ def smats_cc_test(
     Note that for almost all cases, smats_cc_googletest should be used instead of this rule.
 
     By default, sets size="small" because that indicates a unit test.
-    If a list of srcs is not provided, it will be inferred from the name, by capitalizing each _-separated word and appending .cpp.
-    For example, smats_cc_test(name = "test_foo_bar") will look for TestFooBar.cpp.
-    Furthermore, a tag will be added for the test, based on the name, by converting the name to lowercase and removing the "test_" prefix.
+    If a list of srcs is not provided, it will be inferred from the name by appending .cpp.
+    For example, smats_cc_test(name = "test_foo_bar") will look for test_foo_bar.cpp.
+    Furthermore, the name of the test will also be added as a tag.
 
     Args:
         name: The name of the test.
@@ -235,13 +235,13 @@ def smats_cc_test(
         **kwargs: Additional arguments to pass to cc_test.
     """
     if srcs == None:
-        srcs = ["".join([word.capitalize() for word in name.split("_")]) + ".cpp"]
+        srcs = ["%s.cpp" % name]
     cc_test(
         name = name,
         srcs = srcs,
         copts = _get_copts(copts, cc_test = True),
         linkstatic = True,
-        tags = tags + ["smats", "".join([word.lower() for word in name.split("_")][1:])],
+        tags = tags + ["smats", name],
         defines = _get_defines(defines),
         **kwargs
     )
@@ -263,9 +263,9 @@ def smats_cc_googletest(
     By default, it uses size="small" because that indicates a unit test.
     By default, it uses use_default_main=True to use GTest's main, via @googletest//:gtest_main.
     If use_default_main is False, it will depend on @googletest//:gtest instead.
-    If a list of srcs is not provided, it will be inferred from the name, by capitalizing each _-separated word and appending .cpp.
-    For example, smats_cc_test(name = "test_foo_bar") will look for TestFooBar.cpp.
-    Furthermore, a tag will be added for the test, based on the name, by converting the name to lowercase and removing the "test_" prefix.
+    If a list of srcs is not provided, it will be inferred from the name by appending .cpp.
+    For example, smats_cc_test(name = "test_foo_bar") will look for test_foo_bar.cpp.
+    Furthermore, the name of the test will also be added as a tag.
 
     Args:
         name: The name of the test.
