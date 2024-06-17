@@ -43,6 +43,8 @@ smats_cc_library(
     name = "expression_kind",
     srcs = ["expression_kind.cpp"],
     hdrs = ["expression_kind.h"],
+    implementation_deps = ["//smats/util:exception"],
+    deps = ["//smats/util:logging"],
 )
 
 cpplint()

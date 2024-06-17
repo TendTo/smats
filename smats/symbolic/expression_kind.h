@@ -53,7 +53,7 @@ inline bool operator<(ExpressionKind k1, ExpressionKind k2) {
   return static_cast<std::uint16_t>(k1) < static_cast<std::uint16_t>(k2);
 }
 
-std::ostream &operator<<(std::ostream &os, ExpressionKind kind);
+std::ostream &operator<<(std::ostream &os, const ExpressionKind &kind);
 
 }  // namespace smats
 

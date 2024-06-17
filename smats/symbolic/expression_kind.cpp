@@ -6,6 +6,8 @@
  */
 #include "smats/symbolic/expression_kind.h"
 
+#include "smats/util/exception.h"
+
 namespace smats {
 
 std::ostream &operator<<(std::ostream &os, const ExpressionKind &kind) {
@@ -64,6 +66,8 @@ std::ostream &operator<<(std::ostream &os, const ExpressionKind &kind) {
       return os << "NaN";
     case ExpressionKind::UninterpretedFunction:
       return os << "UninterpretedFunction";
+    default:
+      SMATS_UNREACHABLE();
   }
 }
 

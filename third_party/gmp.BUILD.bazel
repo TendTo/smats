@@ -15,10 +15,6 @@ configure_make(
     out_shared_libs = ["libgmp.so"],
     lib_source = ":all_srcs_gmp",
     visibility = ["//visibility:public"],
-    postfix_script = select({
-        "@dlinear//tools:enabled_patchelf": "patchelf --set-soname libgmp.so $INSTALLDIR/lib/libgmp.so",
-        "//conditions:default": "echo 'No patchelf, skipping soname fixup.'",
-    }),
 )
 
 configure_make(
@@ -28,16 +24,12 @@ configure_make(
     out_static_libs = ["libgmpxx.a"],
     out_shared_libs = ["libgmpxx.so"],
     env = select({
-        "@dlinear//tools:clang_build": {"CXX": "clang"},
+        "@smats//tools:clang_build": {"CXX": "clang"},
         "//conditions:default": {"CXX": "g++"},
     }),
     lib_source = ":all_srcs_gmpxx",
     visibility = ["//visibility:public"],
     deps = [":gmp"],
-    postfix_script = select({
-        "@dlinear//tools:enabled_patchelf": "patchelf --set-soname libgmpxx.so $INSTALLDIR/lib/libgmpxx.so",
-        "//conditions:default": "echo 'No patchelf, skipping soname fixup.'",
-    }),
 )
 
 filegroup(
