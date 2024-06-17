@@ -1,0 +1,51 @@
+"""Copied from https://github.com/llvm/llvm-project/blob/main/utils/bazel/third_party_build/gmp.BUILD and https://github.com/bazelbuild/rules_foreign_cc/issues/296
+This file is licensed under the Apache License v2.0 with LLVM Exceptions.
+See https://llvm.org/LICENSE.txt for license information.
+SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+"""
+
+load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
+
+licenses(["notice"])
+
+configure_make(
+    name = "gmp",
+    lib_name = "libgmp",
+    out_static_libs = ["libgmp.a"],
+    out_shared_libs = ["libgmp.so"],
+    lib_source = ":all_srcs_gmp",
+    visibility = ["//visibility:public"],
+    postfix_script = select({
+        "@dlinear//tools:enabled_patchelf": "patchelf --set-soname libgmp.so $INSTALLDIR/lib/libgmp.so",
+        "//conditions:default": "echo 'No patchelf, skipping soname fixup.'",
+    }),
+)
+
+configure_make(
+    name = "gmpxx",
+    configure_options = ["--enable-cxx"],
+    lib_name = "libgmpxx",
+    out_static_libs = ["libgmpxx.a"],
+    out_shared_libs = ["libgmpxx.so"],
+    env = select({
+        "@dlinear//tools:clang_build": {"CXX": "clang"},
+        "//conditions:default": {"CXX": "g++"},
+    }),
+    lib_source = ":all_srcs_gmpxx",
+    visibility = ["//visibility:public"],
+    deps = [":gmp"],
+    postfix_script = select({
+        "@dlinear//tools:enabled_patchelf": "patchelf --set-soname libgmpxx.so $INSTALLDIR/lib/libgmpxx.so",
+        "//conditions:default": "echo 'No patchelf, skipping soname fixup.'",
+    }),
+)
+
+filegroup(
+    name = "all_srcs_gmp",
+    srcs = glob(["**"], exclude = ["**/*.cc", "**/*.cpp", "gmpxx.h"]),
+)
+
+filegroup(
+    name = "all_srcs_gmpxx",
+    srcs = glob(["**"]),
+)

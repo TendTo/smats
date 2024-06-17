@@ -1,0 +1,22 @@
+load("//tools:cpplint.bzl", "cpplint")
+load("//tools:rules_cc.bzl", "smats_cc_library", "smats_srcs")
+
+package(default_visibility = [
+    "//smats:__subpackages__",
+])
+
+smats_srcs(name = "srcs")
+
+smats_cc_library(
+    name = "gmp",
+    srcs = ["gmp.cpp"],
+    hdrs = ["gmp.h"],
+    implementation_deps = ["//smats/util:exception"],
+    deps = [
+        "//smats/util:logging",
+        "@gmp",
+        "@gmp//:gmpxx",
+    ],
+)
+
+cpplint()

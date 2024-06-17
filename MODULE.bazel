@@ -8,18 +8,27 @@ module(name = "smats")
 
 # rules_cc for building C++ libraries with Bazel
 bazel_dep(name = "rules_cc", version = "0.0.9")
+
 # Utility rules for Bazel
 bazel_dep(name = "bazel_skylib", version = "1.5.0")
+
 # argparse implementation for modern C++
 bazel_dep(name = "argparse", version = "3.0.0")
+
 # C++ library for formatting strings
 bazel_dep(name = "fmt", version = "10.2.1")
+
 # Google C++ Style Guide
 bazel_dep(name = "cpplint", version = "1.6.1", dev_dependency = True)
+
 # C++ test suite by Google
 bazel_dep(name = "googletest", version = "1.14.0", dev_dependency = True)
+
 # Doxygen documentation generator
 bazel_dep(name = "rules_doxygen", version = "1.1.1", dev_dependency = True)
+
+# Apache License 2.0 | rules_foreign_cc for building C++ libraries with other build systems
+bazel_dep(name = "rules_foreign_cc", version = "0.10.1")
 
 #################################################################################
 # External dependencies not available in the Bazel registry
@@ -33,6 +42,17 @@ github_archive(
     commit = "v1.12.0",
     repository = "gabime/spdlog",
     sha256 = "4dccf2d10f410c1e2feaff89966bfc49a1abb29ef6f08246335b110e001e09a9",
+)
+
+http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+# GNU Lesser General Public License v3.0 | arbitrary precision arithmetic library
+http_archive(
+    name = "gmp",
+    build_file = "//third_party:gmp.BUILD.bazel",
+    sha256 = "a3c2b80201b89e68616f4ad30bc66aee4927c3ce50e33929ca819d5c43538898",
+    strip_prefix = "gmp-6.3.0",
+    url = "https://ftp.gnu.org/gnu/gmp/gmp-6.3.0.tar.xz",
 )
 
 #################################################################################

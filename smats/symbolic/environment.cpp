@@ -19,48 +19,77 @@ namespace {
  * @param vars list of variables
  * @return Environment::map
  */
-Environment::map BuildMap(const std::initializer_list<Environment::key_type> vars) {
-  Environment::map m;
-  for (const Environment::key_type& var : vars) m.emplace(var, 0.0);
+template <class T>
+typename Environment<T>::map BuildMap(const std::initializer_list<typename Environment<T>::key_type> vars) {
+  typename Environment<T>::map m;
+  for (const typename Environment<T>::key_type& var : vars) m.emplace(var, 0.0);
   return m;
 }
 
 }  // namespace
 
-Environment::Environment(const std::initializer_list<value_type> init) : Environment{map(init)} {}
+template <class T>
+Environment<T>::Environment(const std::initializer_list<value_type> init) : Environment<T>{map(init)} {}
 
-Environment::Environment(const std::initializer_list<key_type> vars) : Environment{BuildMap(vars)} {}
+template <class T>
+Environment<T>::Environment(const std::initializer_list<key_type> vars) : Environment{BuildMap<T>(vars)} {}
 
-Environment::Environment(map m) : map_{std::move(m)} {
+template <class T>
+Environment<T>::Environment(map m) : map_{std::move(m)} {
   if (std::any_of(map_.begin(), map_.end(), [](const auto& p) { return p.first.is_dummy(); }))
     SMATS_RUNTIME_ERROR("Cannot insert dummy variable into Environment");
 }
 
-void Environment::insert(const key_type& key, const mapped_type& elem) {
+template <class T>
+void Environment<T>::insert(const key_type& key, const mapped_type& elem) {
   if (key.is_dummy()) SMATS_RUNTIME_ERROR("Cannot insert dummy variable into Environment");
   map_.emplace(key, elem);
 }
 
-void Environment::insert_or_assign(const key_type& key, const mapped_type& elem) {
+template <class T>
+void Environment<T>::insert_or_assign(const key_type& key, const mapped_type& elem) {
   if (key.is_dummy()) SMATS_RUNTIME_ERROR("Cannot insert dummy variable into Environment");
   map_.insert_or_assign(key, elem);
 }
 
-Variables Environment::domain() const {
+template <class T>
+Variables Environment<T>::domain() const {
   Variables dom;
   for (const auto& p : map_) dom += p.first;
   return dom;
 }
 
-const Environment::mapped_type& Environment::at(const key_type& key) const { return map_.at(key); }
+template <class T>
+const Environment<T>::mapped_type& Environment<T>::at(const key_type& key) const {
+  return map_.at(key);
+}
 
-Environment::mapped_type& Environment::operator[](const key_type& key) { return map_[key]; }
+template <class T>
+Environment<T>::mapped_type& Environment<T>::operator[](const key_type& key) {
+  return map_[key];
+}
 
-const Environment::mapped_type& Environment::operator[](const key_type& key) const { return map_.at(key); }
+template <class T>
+const Environment<T>::mapped_type& Environment<T>::operator[](const key_type& key) const {
+  return map_.at(key);
+}
 
-std::ostream& operator<<(std::ostream& os, const Environment& env) {
+template <class T>
+std::ostream& operator<<(std::ostream& os, const Environment<T>& env) {
   for (const auto& [var, value] : env) os << var << " -> " << value << ", ";
   return os;
 }
+
+template class Environment<int>;
+template class Environment<long>;
+template class Environment<float>;
+template class Environment<double>;
+template class Environment<mpq_class>;
+
+template std::ostream& operator<<(std::ostream& os, const Environment<int>& env);
+template std::ostream& operator<<(std::ostream& os, const Environment<long>& env);
+template std::ostream& operator<<(std::ostream& os, const Environment<float>& env);
+template std::ostream& operator<<(std::ostream& os, const Environment<double>& env);
+template std::ostream& operator<<(std::ostream& os, const Environment<mpq_class>& env);
 
 }  // namespace smats

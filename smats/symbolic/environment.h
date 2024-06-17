@@ -1,3 +1,11 @@
+/**
+ * @author smats (https://github.com/TendTo/smats)
+ * @copyright 2024 smats
+ * @licence Apache-2.0 license
+ * Environment class
+ *
+ * Represents a symbolic environment (mapping from a variable to a value).
+ */
 #pragma once
 
 #include <initializer_list>
@@ -30,11 +38,13 @@ namespace smats {
  * const numeric_type res2 = e2.Evaluate(env);  // x - y => 2.0 - 3.0 => -1.0
  * const bool res = f.Evaluate(env);  // x + y > x - y => 5.0 >= -1.0 => True
  * @endcode
+ * @tparam T type of the value
  */
+template <class T>
 class Environment {
  public:
   using key_type = Variable;
-  using mapped_type = numeric_type;
+  using mapped_type = T;
   using map = std::unordered_map<key_type, mapped_type>;
   using value_type = map::value_type;
   using iterator = map::iterator;
@@ -143,6 +153,13 @@ class Environment {
   map map_;  ///< map between variables and values
 };
 
-std::ostream& operator<<(std::ostream& os, const Environment& env);
+template <class T>
+std::ostream& operator<<(std::ostream& os, const Environment<T>& env);
+
+using EnvironmentI = Environment<int>;
+using EnvironmentL = Environment<long>;
+using EnvironmentF = Environment<float>;
+using EnvironmentD = Environment<double>;
+using EnvironmentR = Environment<mpq_class>;
 
 }  // namespace smats
