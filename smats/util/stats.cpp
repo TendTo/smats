@@ -18,10 +18,10 @@ namespace smats {
 Stats::Stats(const bool enabled, std::string class_name, std::string operations_name)
     : timer_{}, enabled_{enabled}, class_name_{std::move(class_name)}, operations_name_{std::move(operations_name)} {}
 
-std::string Stats::ToSegmentString() const {
+std::string Stats::to_segment_string() const {
   return SMATS_FORMAT(SMATS_STATS_FMT, operations_name_, class_name_, timer_.seconds());
 }
-std::string Stats::ToString() const { return Stats::ToSegmentString(); }
+std::string Stats::to_string() const { return Stats::to_segment_string(); }
 
 Stats &Stats::operator+=(const Stats &other) {
   if (class_name_.empty() && !other.class_name_.empty()) class_name_ = other.class_name_;
@@ -35,14 +35,14 @@ Stats Stats::operator+(const Stats &other) const {
   return result;
 }
 
-void IterationStats::Increase() {
+void IterationStats::increase() {
   if (enabled_) std::atomic_fetch_add_explicit(&iterations_, 1, std::memory_order_relaxed);
 }
 
-std::string IterationStats::ToSegmentString() const {
+std::string IterationStats::to_segment_string() const {
   return SMATS_FORMAT(SMATS_ITERATION_STATS_FMT, iterations_name_, class_name_, iterations_.load());
 }
-std::string IterationStats::ToString() const { return IterationStats::ToSegmentString() + "\n" + Stats::ToString(); }
+std::string IterationStats::to_string() const { return IterationStats::to_segment_string() + "\n" + Stats::to_string(); }
 
 IterationStats::IterationStats(bool enabled, std::string class_name, std::string operations_name,
                                std::string iterations_name)
@@ -52,8 +52,8 @@ IterationStats::IterationStats(bool enabled, std::string class_name, std::string
 IterationStats::IterationStats(const smats::IterationStats &other)
     : Stats(other), iterations_{other.iterations_.load()}, iterations_name_{other.iterations_name_} {}
 
-void IterationStats::operator++() { Increase(); }
-void IterationStats::operator++(int) { Increase(); }
+void IterationStats::operator++() { increase(); }
+void IterationStats::operator++(int) { increase(); }
 IterationStats &IterationStats::operator=(const IterationStats &other) {
   if (this != &other) {
     Stats::operator=(other);
@@ -74,7 +74,7 @@ IterationStats IterationStats::operator+(const IterationStats &other) const {
   return result;
 }
 
-std::ostream &operator<<(std::ostream &os, const Stats &stats) { return os << stats.ToString(); }
-std::ostream &operator<<(std::ostream &os, const IterationStats &stats) { return os << stats.ToString(); }
+std::ostream &operator<<(std::ostream &os, const Stats &stats) { return os << stats.to_string(); }
+std::ostream &operator<<(std::ostream &os, const IterationStats &stats) { return os << stats.to_string(); }
 
 }  // namespace smats

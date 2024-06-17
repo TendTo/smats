@@ -34,7 +34,7 @@ class TestVariable : public ::testing::Test {
 TEST_F(TestVariable, DummyConstructor) {
   const Variable x;
   EXPECT_TRUE(x.is_dummy());
-  EXPECT_EQ(x.name(), "d");
+  EXPECT_EQ(x.name(), "dummy");
   EXPECT_EQ(x.type(), Variable::Type::CONTINUOUS);
 }
 
@@ -69,7 +69,7 @@ TEST_F(TestVariable, MoveConstructor) {
   EXPECT_EQ(j.type(), i_.type());
 
   EXPECT_TRUE(i.is_dummy());
-  EXPECT_EQ(i.name(), "d");
+  EXPECT_EQ(i.name(), "dummy");
   EXPECT_EQ(i.type(), Variable::Type::CONTINUOUS);
 }
 
@@ -91,7 +91,7 @@ TEST_F(TestVariable, MoveAssignment) {
   EXPECT_EQ(j.type(), i_.type());
 
   EXPECT_TRUE(i.is_dummy());
-  EXPECT_EQ(i.name(), "d");
+  EXPECT_EQ(i.name(), "dummy");
   EXPECT_EQ(i.type(), Variable::Type::CONTINUOUS);
 }
 

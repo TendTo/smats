@@ -92,14 +92,14 @@ TEST_F(TestVariables, SubsetChecking) {
   Variables subset;
   subset.insert(z_);
   subset.insert(y_);
-  EXPECT_TRUE(subset.IsSubsetOf(vars_));
-  EXPECT_FALSE(vars_.IsSubsetOf(subset));
-  EXPECT_TRUE(vars_.IsSupersetOf(subset));
-  EXPECT_FALSE(subset.IsSupersetOf(vars_));
-  EXPECT_TRUE(subset.IsStrictSubsetOf(vars_));
-  EXPECT_FALSE(vars_.IsStrictSubsetOf(subset));
-  EXPECT_TRUE(vars_.IsStrictSupersetOf(subset));
-  EXPECT_FALSE(subset.IsStrictSupersetOf(vars_));
+  EXPECT_TRUE(subset.is_subset_of(vars_));
+  EXPECT_FALSE(vars_.is_subset_of(subset));
+  EXPECT_TRUE(vars_.is_superset_of(subset));
+  EXPECT_FALSE(subset.is_superset_of(vars_));
+  EXPECT_TRUE(subset.is_strict_subset_of(vars_));
+  EXPECT_FALSE(vars_.is_strict_subset_of(subset));
+  EXPECT_TRUE(vars_.is_strict_superset_of(subset));
+  EXPECT_FALSE(subset.is_strict_superset_of(vars_));
 }
 
 TEST_F(TestVariables, Ostream) { EXPECT_NO_THROW(std::cout << vars_ << std::endl); }

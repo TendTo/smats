@@ -21,20 +21,20 @@ Variables::size_type Variables::erase(const Variables& vars) {
   return num_of_erased_elements;
 }
 
-bool Variables::IsSubsetOf(const Variables& vars) const {
+bool Variables::is_subset_of(const Variables& vars) const {
   return std::includes(vars.begin(), vars.end(), begin(), end(), std::less<Variable>{});
 }
 
-bool Variables::IsSupersetOf(const Variables& vars) const { return vars.IsSubsetOf(*this); }
+bool Variables::is_superset_of(const Variables& vars) const { return vars.is_subset_of(*this); }
 
-bool Variables::IsStrictSubsetOf(const Variables& vars) const {
+bool Variables::is_strict_subset_of(const Variables& vars) const {
   if (*this == vars) return false;
-  return IsSubsetOf(vars);
+  return is_subset_of(vars);
 }
 
-bool Variables::IsStrictSupersetOf(const Variables& vars) const {
+bool Variables::is_strict_superset_of(const Variables& vars) const {
   if (*this == vars) return false;
-  return IsSupersetOf(vars);
+  return is_superset_of(vars);
 }
 
 bool Variables::operator==(const Variables& vars) const {

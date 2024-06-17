@@ -123,13 +123,13 @@ class Variables {
   [[nodiscard]] bool include(const Variable& key) const { return find(key) != end(); }
 
   /** Return true if @p vars is a subset of the Variables. */
-  [[nodiscard]] bool IsSubsetOf(const Variables& vars) const;
+  [[nodiscard]] bool is_subset_of(const Variables& vars) const;
   /** Return true if @p vars is a superset of the Variables. */
-  [[nodiscard]] bool IsSupersetOf(const Variables& vars) const;
+  [[nodiscard]] bool is_superset_of(const Variables& vars) const;
   /** Return true if @p vars is a strict subset of the Variables. */
-  [[nodiscard]] bool IsStrictSubsetOf(const Variables& vars) const;
+  [[nodiscard]] bool is_strict_subset_of(const Variables& vars) const;
   /** Return true if @p vars is a strict superset of the Variables. */
-  [[nodiscard]] bool IsStrictSupersetOf(const Variables& vars) const;
+  [[nodiscard]] bool is_strict_superset_of(const Variables& vars) const;
 
   bool operator==(const Variables& vars) const;
   bool operator<(const Variables& vars) const;

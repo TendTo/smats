@@ -46,12 +46,12 @@ class Stats {
    * part the Stat object is concerned about
    * @return string representing a partial state of the Stats
    */
-  [[nodiscard]] virtual std::string ToSegmentString() const;
+  [[nodiscard]] virtual std::string to_segment_string() const;
   /**
    * Convert the current state of the object to a formatted string
    * @return string representing the state of the Stats
    */
-  [[nodiscard]] virtual std::string ToString() const;
+  [[nodiscard]] virtual std::string to_string() const;
 };
 
 class IterationStats : public Stats {
@@ -68,15 +68,15 @@ class IterationStats : public Stats {
   IterationStats &operator+=(const IterationStats &other);
   IterationStats operator+(const IterationStats &other) const;
 
-  [[nodiscard]] std::string ToSegmentString() const override;
+  [[nodiscard]] std::string to_segment_string() const override;
 
-  [[nodiscard]] std::string ToString() const override;
+  [[nodiscard]] std::string to_string() const override;
 
   /**
    * Increase the iteration counter by one.
    * @note The iteration counter is atomic.
    */
-  void Increase();
+  void increase();
 
   [[nodiscard]] unsigned int iterations() const { return iterations_.load(); }
 

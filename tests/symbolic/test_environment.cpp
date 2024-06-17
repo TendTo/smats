@@ -6,85 +6,91 @@ using smats::Environment;
 using smats::Variable;
 using smats::Variables;
 
+#define TEnvironment Environment<TypeParam>
+
+template <class T>
 class TestEnvironment : public ::testing::Test {
  protected:
   const Variable x_{"x"};
   const Variable y_{"y"};
-  Environment env_;
+  Environment<T> env_;
 };
 
-TEST_F(TestEnvironment, InsertAndAccess) {
-  env_.insert(x_, 2.0);
-  env_.insert(y_, 3.0);
+using TestParams = ::testing::Types<int, float, double, mpq_class>;
+TYPED_TEST_SUITE(TestEnvironment, TestParams);
 
-  EXPECT_EQ(env_.at(x_), 2.0);
-  EXPECT_EQ(env_.at(y_), 3.0);
+TYPED_TEST(TestEnvironment, InsertAndAccess) {
+  this->env_.insert(this->x_, 2.0);
+  this->env_.insert(this->y_, 3.0);
+
+  EXPECT_EQ(this->env_.at(this->x_), 2.0);
+  EXPECT_EQ(this->env_.at(this->y_), 3.0);
 }
 
-TEST_F(TestEnvironment, InsertOrAssign) {
-  env_.insert_or_assign(x_, 2.0);
-  env_.insert_or_assign(y_, 3.0);
-  env_.insert_or_assign(x_, 4.0);
+TYPED_TEST(TestEnvironment, InsertOrAssign) {
+  this->env_.insert_or_assign(this->x_, 2.0);
+  this->env_.insert_or_assign(this->y_, 3.0);
+  this->env_.insert_or_assign(this->x_, 4.0);
 
-  EXPECT_EQ(env_.at(x_), 4.0);
-  EXPECT_EQ(env_.at(y_), 3.0);
+  EXPECT_EQ(this->env_.at(this->x_), 4.0);
+  EXPECT_EQ(this->env_.at(this->y_), 3.0);
 }
 
-TEST_F(TestEnvironment, FindExistingKey) {
-  env_.insert(x_, 2.0);
-  env_.insert(y_, 3.0);
+TYPED_TEST(TestEnvironment, FindExistingKey) {
+  this->env_.insert(this->x_, 2.0);
+  this->env_.insert(this->y_, 3.0);
 
-  auto it_x = env_.find(x_);
-  auto it_y = env_.find(y_);
+  auto it_x = this->env_.find(this->x_);
+  auto it_y = this->env_.find(this->y_);
 
-  EXPECT_NE(it_x, env_.end());
-  EXPECT_NE(it_y, env_.end());
+  EXPECT_NE(it_x, this->env_.end());
+  EXPECT_NE(it_y, this->env_.end());
   EXPECT_EQ(it_x->second, 2.0);
   EXPECT_EQ(it_y->second, 3.0);
 }
 
-TEST_F(TestEnvironment, FindNonExistingKey) {
-  env_.insert(x_, 2.0);
+TYPED_TEST(TestEnvironment, FindNonExistingKey) {
+  this->env_.insert(this->x_, 2.0);
 
-  auto it_y = env_.find(y_);
+  auto it_y = this->env_.find(this->y_);
 
-  EXPECT_EQ(it_y, env_.end());
+  EXPECT_EQ(it_y, this->env_.end());
 }
 
-TEST_F(TestEnvironment, AccessNonExistingKey) {
-  [[maybe_unused]] numeric_type val;
-  EXPECT_THROW(val = env_.at(x_), std::out_of_range);
+TYPED_TEST(TestEnvironment, AccessNonExistingKey) {
+  [[maybe_unused]] TypeParam val;
+  EXPECT_THROW(val = this->env_.at(this->x_), std::out_of_range);
 }
 
-TEST_F(TestEnvironment, SizeAndEmpty) {
-  EXPECT_TRUE(env_.empty());
-  EXPECT_EQ(env_.size(), 0u);
+TYPED_TEST(TestEnvironment, SizeAndEmpty) {
+  EXPECT_TRUE(this->env_.empty());
+  EXPECT_EQ(this->env_.size(), 0u);
 
-  env_.insert(x_, 2.0);
+  this->env_.insert(this->x_, 2.0);
 
-  EXPECT_FALSE(env_.empty());
-  EXPECT_EQ(env_.size(), 1u);
+  EXPECT_FALSE(this->env_.empty());
+  EXPECT_EQ(this->env_.size(), 1u);
 
-  env_.insert(y_, 3.0);
+  this->env_.insert(this->y_, 3.0);
 
-  EXPECT_EQ(env_.size(), 2u);
+  EXPECT_EQ(this->env_.size(), 2u);
 }
 
-TEST_F(TestEnvironment, Domain) {
-  env_.insert(x_, 2.0);
-  env_.insert(y_, 3.0);
+TYPED_TEST(TestEnvironment, Domain) {
+  this->env_.insert(this->x_, 2.0);
+  this->env_.insert(this->y_, 3.0);
 
-  Variables domain = env_.domain();
+  Variables domain = this->env_.domain();
 
   EXPECT_EQ(domain.size(), 2u);
-  EXPECT_TRUE(domain.include(x_));
-  EXPECT_TRUE(domain.include(y_));
+  EXPECT_TRUE(domain.include(this->x_));
+  EXPECT_TRUE(domain.include(this->y_));
 }
 
-TEST_F(TestEnvironment, Stdout) {
-  EXPECT_NO_THROW(std::cout << env_ << std::endl);
-  env_.insert(x_, 2.0);
-  EXPECT_NO_THROW(std::cout << env_ << std::endl);
-  env_.insert(y_, 3.0);
-  EXPECT_NO_THROW(std::cout << env_ << std::endl);
+TYPED_TEST(TestEnvironment, Stdout) {
+  EXPECT_NO_THROW(std::cout << this->env_ << std::endl);
+  this->env_.insert(this->x_, 2.0);
+  EXPECT_NO_THROW(std::cout << this->env_ << std::endl);
+  this->env_.insert(this->y_, 3.0);
+  EXPECT_NO_THROW(std::cout << this->env_ << std::endl);
 }
