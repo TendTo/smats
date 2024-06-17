@@ -8,8 +8,10 @@
 #include <iostream>
 
 #include "smats/version.h"
+#include <gmpxx.h>
 
 int main(int argc, char **argv) {
   fmt::println("Hello world!");
   fmt::println("Version: {}", SMATS_VERSION_STRING);
+  std::cout << mpq_class(1, 2) + mpq_class{1, 4} << std::endl;
 }

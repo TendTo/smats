@@ -9,6 +9,168 @@ package(default_visibility = [
 smats_srcs(name = "srcs")
 
 smats_cc_library(
+    name = "prefix_printer",
+    srcs = ["prefix_printer.cpp"],
+    hdrs = ["prefix_printer.h"],
+    implementation_deps = [
+        ":literal",
+        "//smats/libs:gmp",
+    ],
+    deps = [":symbolic"],
+)
+
+smats_cc_library(
+    name = "symbolic",
+    srcs = ["symbolic.cpp"],
+    hdrs = ["symbolic.h"],
+    implementation_deps = [
+        "//smats/libs:gmp",
+        "//smats/util:exception",
+    ],
+    deps = [
+        ":literal",
+        "//smats/util:logging",
+        "//third_party/com_github_robotlocomotion_drake:drake_symbolic",
+    ],
+)
+
+smats_cc_library(
+    name = "formula_visitor",
+    hdrs = ["FormulaVisitor.h"],
+    deps = [
+        ":symbolic",
+        "//smats/util:config",
+        "//smats/util:stats",
+    ],
+)
+
+smats_cc_library(
+    name = "linear_formula_flattener",
+    srcs = ["LinearFormulaFlattener.cpp"],
+    hdrs = ["LinearFormulaFlattener.h"],
+    implementation_deps = [
+        "//smats/libs:gmp",
+        "//smats/util:exception",
+    ],
+    deps = [
+        ":symbolic",
+        "//smats/util:config",
+    ],
+)
+
+smats_cc_library(
+    name = "literal",
+    srcs = ["literal.cpp"],
+    hdrs = ["literal.h"],
+    deps = [
+        "//smats/util:logging",
+        "//third_party/com_github_robotlocomotion_drake:drake_symbolic",
+    ],
+)
+
+smats_cc_library(
+    name = "expression_evaluator",
+    srcs = ["ExpressionEvaluator.cpp"],
+    hdrs = ["ExpressionEvaluator.h"],
+    implementation_deps = [
+        ":literal",
+        "//smats/libs:gmp",
+        "//smats/util:exception",
+    ],
+    deps = [
+        ":symbolic",
+        "//smats/util:box",
+    ],
+)
+
+smats_cc_library(
+    name = "nnfizier",
+    srcs = ["Nnfizer.cpp"],
+    hdrs = ["Nnfizer.h"],
+    implementation_deps = ["//smats/util:logging"],
+    deps = [":symbolic"],
+)
+
+smats_cc_library(
+    name = "cnfizer",
+    srcs = ["NaiveCnfizer.cpp"],
+    hdrs = ["NaiveCnfizer.h"],
+    implementation_deps = ["//smats/util:exception"],
+    deps = [
+        ":nnfizier",
+        ":symbolic",
+    ],
+)
+
+smats_cc_library(
+    name = "if_then_else_eliminator",
+    srcs = ["IfThenElseEliminator.cpp"],
+    hdrs = ["IfThenElseEliminator.h"],
+    implementation_deps = [
+        ":nnfizier",
+        "//smats/libs:gmp",
+        "//smats/util:timer",
+    ],
+    deps = [
+        ":literal",
+        ":symbolic",
+        "//smats/util:config",
+        "//smats/util:stats",
+    ],
+)
+
+smats_cc_library(
+    name = "predicate_abstractor",
+    srcs = ["PredicateAbstractor.cpp"],
+    hdrs = ["PredicateAbstractor.h"],
+    implementation_deps = [
+        "//smats/util:stats",
+        "//smats/util:timer",
+    ],
+    deps = [
+        ":formula_visitor",
+        ":linear_formula_flattener",
+        ":literal",
+        ":symbolic",
+        "//smats/util:config",
+    ],
+)
+
+smats_cc_library(
+    name = "plaisted_greenbaum_cnfizer",
+    srcs = ["PlaistedGreenbaumCnfizer.cpp"],
+    hdrs = ["PlaistedGreenbaumCnfizer.h"],
+    implementation_deps = [
+        "//smats/util:exception",
+        "//smats/util:stats",
+        "//smats/util:timer",
+    ],
+    deps = [
+        ":cnfizer",
+        ":formula_visitor",
+        ":literal",
+        ":nnfizier",
+        ":symbolic",
+        "//smats/util:config",
+    ],
+)
+
+smats_cc_library(
+    name = "tseitin_cnfizer",
+    srcs = ["TseitinCnfizer.cpp"],
+    hdrs = ["TseitinCnfizer.h"],
+    deps = [
+        ":cnfizer",
+        ":formula_visitor",
+        ":symbolic",
+        "//smats/util:exception",
+        "//smats/util:logging",
+        "//smats/util:stats",
+        "//smats/util:timer",
+    ],
+)
+
+smats_cc_library(
     name = "variable",
     srcs = ["variable.cpp"],
     hdrs = ["variable.h"],
@@ -45,6 +207,21 @@ smats_cc_library(
     hdrs = ["expression_kind.h"],
     implementation_deps = ["//smats/util:exception"],
     deps = ["//smats/util:logging"],
+)
+
+smats_cc_library(
+    name = "expression_cell",
+    srcs = ["expression_cell.cpp"],
+    hdrs = ["expression_cell.h"],
+    implementation_deps = ["//smats/util:exception"],
+    deps = [
+        ":environment",
+        ":expression_kind",
+        ":variables",
+        "//smats/lib:gmp",
+        "//smats/util:hash",
+        "//smats/util:logging",
+    ],
 )
 
 cpplint()
