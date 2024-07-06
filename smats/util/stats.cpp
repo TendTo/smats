@@ -19,7 +19,7 @@ Stats::Stats(const bool enabled, std::string class_name, std::string operations_
     : timer_{}, enabled_{enabled}, class_name_{std::move(class_name)}, operations_name_{std::move(operations_name)} {}
 
 std::string Stats::to_segment_string() const {
-  return SMATS_FORMAT(SMATS_STATS_FMT, operations_name_, class_name_, timer_.seconds());
+  return fmt::format(SMATS_STATS_FMT, operations_name_, class_name_, timer_.seconds());
 }
 std::string Stats::to_string() const { return Stats::to_segment_string(); }
 
@@ -40,7 +40,7 @@ void IterationStats::increase() {
 }
 
 std::string IterationStats::to_segment_string() const {
-  return SMATS_FORMAT(SMATS_ITERATION_STATS_FMT, iterations_name_, class_name_, iterations_.load());
+  return fmt::format(SMATS_ITERATION_STATS_FMT, iterations_name_, class_name_, iterations_.load());
 }
 std::string IterationStats::to_string() const {
   return IterationStats::to_segment_string() + "\n" + Stats::to_string();

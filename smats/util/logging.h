@@ -63,7 +63,6 @@ std::shared_ptr<spdlog::logger> get_logger(bool to_stdout);  // NOLINT
 #include <fmt/core.h>  // IWYU pragma: export
 
 #define OSTREAM_FORMATTER(type)
-#define SMATS_FORMAT(message, ...) fmt::format(message, __VA_ARGS__)
 #define SMATS_VERBOSITY_TO_LOG_LEVEL(verbosity) 0
 #define SMATS_LOG_INIT_LEVEL(level) void(0)
 #define SMATS_LOG_INIT_VERBOSITY(verbosity) void(0)
