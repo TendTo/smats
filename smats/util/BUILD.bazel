@@ -39,7 +39,10 @@ smats_cc_library(
     name = "timer",
     srcs = ["timer.cpp"],
     hdrs = ["timer.h"],
-    implementation_deps = [":logging"],
+    implementation_deps = [
+        ":exception",
+        ":logging",
+    ],
 )
 
 smats_cc_library(

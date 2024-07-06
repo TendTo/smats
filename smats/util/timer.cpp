@@ -6,7 +6,7 @@
 
 #include "smats/util/timer.h"
 
-#ifndef WIN32
+#ifndef _WIN32
 #include <sys/resource.h>
 #else
 #include <windows.h>
@@ -14,6 +14,7 @@
 
 #include <stdexcept>
 
+#include "smats/util/exception.h"
 #include "smats/util/logging.h"
 
 namespace smats {
@@ -62,22 +63,19 @@ std::chrono::duration<double>::rep TimerBase<T>::seconds() const {
   return std::chrono::duration_cast<std::chrono::duration<double>>(elapsed()).count();
 }
 
-#ifndef WIN32
 user_clock::time_point user_clock::now() {
   SMATS_TRACE("user_clock::now");
+#ifndef _WIN32
   struct rusage usage {};
-  if (0 != getrusage(RUSAGE_SELF, &usage)) throw std::runtime_error("Failed to get current resource usage (getrusage)");
+  if (0 != getrusage(RUSAGE_SELF, &usage)) SMATS_RUNTIME_ERROR("Failed to get current resource usage (getrusage)");
   return time_point(duration(uint64_t(usage.ru_utime.tv_sec) * std::micro::den + uint64_t(usage.ru_utime.tv_usec)));
-}
 #else
-user_clock::time_point user_clock::now() {
-  SMATS_TRACE("user_clock::now");
   FILETIME creation_time, exit_time, kernel_time, user_time;
   if (!GetProcessTimes(GetCurrentProcess(), &creation_time, &exit_time, &kernel_time, &user_time))
-    throw std::runtime_error("Failed to get current resource usage (GetProcessTimes)");
-  return time_point(duration(uint64_t(user_time.dwHighDateTime) << 32 | user_time.dwLowDateTime));
-}
+    SMATS_RUNTIME_ERROR("Failed to get current resource usage (GetProcessTimes)");
+  return time_point(duration(((uint64_t(user_time.dwHighDateTime) << 32 | uint64_t(user_time.dwLowDateTime))) / 10));
 #endif
+}
 
 // Explicit instantiations
 template class TimerBase<chosen_steady_clock>;
