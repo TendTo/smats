@@ -10,9 +10,7 @@
 #pragma once
 
 #include <cstdint>
-#include <iostream>
-
-#include "smats/util/logging.h"
+#include <istream>
 
 namespace smats {
 
@@ -56,5 +54,3 @@ inline bool operator<(ExpressionKind k1, ExpressionKind k2) {
 std::ostream &operator<<(std::ostream &os, const ExpressionKind &kind);
 
 }  // namespace smats
-
-OSTREAM_FORMATTER(smats::ExpressionKind);

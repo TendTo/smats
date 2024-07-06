@@ -13,8 +13,6 @@
 #include <cstring>
 #include <string_view>
 
-#include "smats/util/logging.h"
-
 namespace std {
 
 template <>
@@ -134,5 +132,3 @@ inline bool is_digit_or_sign(char c) { return std::isdigit(c) || c == '+' || c =
 mpq_class string_to_mpq(std::string_view str);
 
 }  // namespace smats::gmp
-
-OSTREAM_FORMATTER(mpq_class)

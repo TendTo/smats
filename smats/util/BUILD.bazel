@@ -64,4 +64,13 @@ smats_cc_library(
     ],
 )
 
+smats_cc_library(
+    name = "fmt_ostream",
+    hdrs = ["fmt_ostream.h"],
+    deps = [
+        "//smats/symbolic",
+        "@fmt",
+    ],
+)
+
 cpplint()

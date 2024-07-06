@@ -14,9 +14,8 @@
 
 #ifndef NLOG
 
-#include <fmt/core.h>     // IWYU pragma: export
-#include <fmt/ostream.h>  // IWYU pragma: export
-#include <fmt/ranges.h>   // IWYU pragma: export
+#include <fmt/core.h>    // IWYU pragma: export
+#include <fmt/ranges.h>  // IWYU pragma: export
 #include <spdlog/logger.h>
 
 #include <memory>
@@ -26,11 +25,6 @@ namespace smats {
 std::shared_ptr<spdlog::logger> get_logger(bool to_stdout);  // NOLINT
 
 }  // namespace smats
-
-#define OSTREAM_FORMATTER(type) \
-  template <>                   \
-  struct fmt::formatter<type> : ostream_formatter {};
-#define SMATS_FORMAT(message, ...) fmt::format(message, __VA_ARGS__)
 
 #define SMATS_VERBOSITY_TO_LOG_LEVEL(verbosity)                        \
   ((verbosity) == 0                                                    \

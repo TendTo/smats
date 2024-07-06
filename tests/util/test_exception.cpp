@@ -14,8 +14,10 @@ using std::runtime_error;
 
 class TestException : public ::testing::Test {
  protected:
-  void SetUp() override { SMATS_LOG_INIT_VERBOSITY(5); }
-  void TearDown() override { SMATS_LOG_INIT_VERBOSITY(-1); }
+#ifndef NDEBUG
+  TestException() { SMATS_LOG_INIT_VERBOSITY(5); }
+  ~TestException() { SMATS_LOG_INIT_VERBOSITY(-1); }
+#endif
 };
 
 TEST_F(TestException, AssertFail) {

@@ -12,8 +12,6 @@
 
 #include <stdexcept>
 
-#include "smats/util/logging.h"
-
 #ifdef NDEBUG
 
 #define SMATS_ASSERT(condition, msg) ((void)0)
@@ -28,6 +26,8 @@
 #else
 
 #include <fmt/core.h>
+
+#include "smats/util/logging.h"
 
 #define SMATS_ASSERT(condition, message)                                                                 \
   do {                                                                                                   \

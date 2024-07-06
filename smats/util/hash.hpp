@@ -55,6 +55,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <functional>
+#include <iostream>
 #include <map>
 #include <optional>
 #include <set>
@@ -64,7 +65,6 @@
 #include <vector>
 
 #include "smats/util/concepts.h"
-#include "smats/util/exception.h"
 
 namespace smats {
 
@@ -125,8 +125,13 @@ void hash_append(InvocableHashAlgorithm auto& hasher, const IsEnum auto& item) n
  */
 template <std::floating_point T>
 void hash_append(InvocableHashAlgorithm auto& hasher, const T& item) noexcept {
-  // Hashing a NaN makes no sense, since they cannot compare as equal.
-  SMATS_ASSERT(!std::isnan(item), "NaN is not a valid hash key.");
+// Hashing a NaN makes no sense, since they cannot compare as equal.
+#ifndef NDEBUG
+  if (std::isnan(item)) {
+    std::cerr << "Hashing a NaN makes no sense, since they cannot compare as equal." << std::endl;
+    std::terminate();
+  }
+#endif
   // +0.0 and -0.0 are equal, so must hash identically.
   if (item == 0.0) {
     const T zero{0.0};
@@ -309,7 +314,7 @@ class FNV1a {
 };
 }  // namespace hash
 
-using DefaultHashAlgorithm = hash::FNV1a;                  ///< The default hashing algorithm. The return type is size_t
+using DefaultHashAlgorithm = hash::FNV1a;                ///< The default hashing algorithm. The return type is size_t
 using DefaultHash = smats::uhash<DefaultHashAlgorithm>;  ///< The default hashing functor. It behaves like std::hash
 
 /**
@@ -327,7 +332,7 @@ struct DelegatingHasher {
    * @param func hash algorithm implementation
    */
   explicit DelegatingHasher(Func func) : func_(std::move(func)) {
-    if (!static_cast<bool>(func_)) SMATS_RUNTIME_ERROR("The function must be non-empty");
+    if (!static_cast<bool>(func_)) throw std::runtime_error("The function must be non-empty");
   }
   /**
    * Delegation of the hash algorithm to @ref func_ .
@@ -341,7 +346,7 @@ struct DelegatingHasher {
    * It is necessary for this struct to correctly implement the @ref Hashable concept.
    * @warning This function should never be called.
    */
-  operator result_type() noexcept { SMATS_UNREACHABLE(); }
+  operator result_type() noexcept { std::terminate(); }
 
  private:
   const Func func_;  ///< Concrete hash algorithm implementation
