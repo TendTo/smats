@@ -19,7 +19,7 @@ namespace smats {
 /**
  * Kinds of symbolic expressions.
  */
-enum class ExpressionKind : std::uint16_t {
+enum class ExpressionKind {
   Constant,               ///< constant (double)
   Var,                    ///< variable
   Add,                    ///< addition (+)

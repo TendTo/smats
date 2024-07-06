@@ -33,13 +33,13 @@ TEST_F(TestVariables, Empty) { EXPECT_FALSE(vars_.empty()); }
 TEST_F(TestVariables, Insert) {
   vars_.insert(w_);
   EXPECT_EQ(vars_.size(), 4u);
-  EXPECT_TRUE(vars_.include(w_));
+  EXPECT_TRUE(vars_.contains(w_));
 }
 
 TEST_F(TestVariables, Erase) {
   vars_.erase(y_);
   EXPECT_EQ(vars_.size(), 2u);
-  EXPECT_FALSE(vars_.include(y_));
+  EXPECT_FALSE(vars_.contains(y_));
 }
 
 TEST_F(TestVariables, Find) {
@@ -53,7 +53,7 @@ TEST_F(TestVariables, OperatorPlus) {
   other.insert(w_);
   Variables result = vars_ + other;
   EXPECT_EQ(result.size(), 4u);
-  EXPECT_TRUE(result.include(w_));
+  EXPECT_TRUE(result.contains(w_));
 }
 
 TEST_F(TestVariables, OperatorMinus) {
@@ -61,7 +61,7 @@ TEST_F(TestVariables, OperatorMinus) {
   other.insert(y_);
   Variables result = vars_ - other;
   EXPECT_EQ(result.size(), 2u);
-  EXPECT_FALSE(result.include(y_));
+  EXPECT_FALSE(result.contains(y_));
 }
 
 TEST_F(TestVariables, Intersect) {
@@ -70,7 +70,7 @@ TEST_F(TestVariables, Intersect) {
   other.insert(w_);
   Variables result = vars_.intersect(other);
   EXPECT_EQ(result.size(), 1u);
-  EXPECT_TRUE(result.include(y_));
+  EXPECT_TRUE(result.contains(y_));
 }
 
 TEST_F(TestVariables, EqualityOperator) {

@@ -119,16 +119,31 @@ class Variables {
    * @return const_iterator to the element with key equivalent to @p key
    */
   [[nodiscard]] const_iterator find(const Variable& key) const { return vars_.find(key); }
-  /** @checker{contained in the set, variable @p key }*/
-  [[nodiscard]] bool include(const Variable& key) const { return find(key) != end(); }
+  /**
+   * @checker{contained in the set, variable @p key }
+   * @param key variable to check
+   */
+  [[nodiscard]] bool contains(const Variable& key) const { return find(key) != end(); }
 
-  /** Return true if @p vars is a subset of the Variables. */
+  /**
+   * @checker{subset of @p vars, this set of variables}
+   * @param vars set of variables
+   */
   [[nodiscard]] bool is_subset_of(const Variables& vars) const;
-  /** Return true if @p vars is a superset of the Variables. */
+  /**
+   * @checker{superset of @p vars, this set of variables}
+   * @param vars set of variables
+   */
   [[nodiscard]] bool is_superset_of(const Variables& vars) const;
-  /** Return true if @p vars is a strict subset of the Variables. */
+  /**
+   * @checker{strict subset of @p vars, this set of variables}
+   * @param vars set of variables
+   */
   [[nodiscard]] bool is_strict_subset_of(const Variables& vars) const;
-  /** Return true if @p vars is a strict superset of the Variables. */
+  /**
+   * @checker{strict superset of @p vars, this set of variables}
+   * @param vars set of variables
+   */
   [[nodiscard]] bool is_strict_superset_of(const Variables& vars) const;
 
   bool operator==(const Variables& vars) const;
@@ -146,6 +161,11 @@ class Variables {
   Variables operator-(const Variables& vars) const;
   Variables operator-(const Variable& var) const;
 
+  /**
+   * Return the intersection of two sets of variables.
+   * @param vars set of variables
+   * @return intersection of two sets of variables
+   */
   [[nodiscard]] Variables intersect(const Variables& vars) const;
 
  private:

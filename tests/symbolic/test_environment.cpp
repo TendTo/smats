@@ -121,8 +121,8 @@ TYPED_TEST(TestEnvironment, Domain) {
   Variables domain = this->env_.domain();
 
   EXPECT_EQ(domain.size(), 2u);
-  EXPECT_TRUE(domain.include(this->x_));
-  EXPECT_TRUE(domain.include(this->y_));
+  EXPECT_TRUE(domain.contains(this->x_));
+  EXPECT_TRUE(domain.contains(this->y_));
 }
 
 TYPED_TEST(TestEnvironment, Stdout) {
