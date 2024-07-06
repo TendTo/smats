@@ -8,11 +8,8 @@
 #include <gmp.h>    // IWYU pragma: export
 #include <gmpxx.h>  // IWYU pragma: export
 
-#include <algorithm>
 #include <cctype>
-#include <cmath>
 #include <cstring>
-#include <string>
 #include <string_view>
 
 #include "smats/util/logging.h"

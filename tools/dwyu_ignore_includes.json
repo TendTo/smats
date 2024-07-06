@@ -1,0 +1,6 @@
+{
+  "extra_ignore_include_paths": [
+    "gmp.h",
+    "gmpxx.h"
+  ]
+}

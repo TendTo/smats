@@ -1,0 +1,5 @@
+[
+    { "include": ["<bits/std_abs.h>", private, "<cmath>", public] },
+    { "include": ["<bits/chrono.h>", private, "<chrono>", public] },
+    { "include": ["<bits/types/struct_rusage.h>", private, "<sys/resource.h>", public] },
+]

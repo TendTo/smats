@@ -7,6 +7,7 @@
 #include "smats/symbolic/expression_kind.h"
 
 #include <map>
+#include <string>
 
 #include "smats/util/exception.h"
 

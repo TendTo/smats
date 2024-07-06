@@ -9,13 +9,17 @@
  * A symbolic variable is a named entity that can take a value from a specific domain.
  */
 #pragma once
+// IWYU pragma: no_include <string_view>
 
+#include <cstddef>
+#include <cstdint>
 #include <functional>
 #include <memory>
 #include <ostream>
 #include <string>
 #include <utility>
 
+#include "smats/util/concepts.h"
 #include "smats/util/hash.hpp"
 
 namespace smats {
@@ -27,10 +31,10 @@ namespace smats {
  */
 class Variable {
  public:
-  using Id = size_t;
+  using Id = std::size_t;
 
   /** Supported types of symbolic variables. */
-  enum class Type : uint8_t {
+  enum class Type : std::uint8_t {
     CONTINUOUS,  ///< A CONTINUOUS variable takes a `double` value.
     INTEGER,     ///< An INTEGER variable takes an `int` value.
     BINARY,      ///< A BINARY variable takes an integer value from {0, 1}.
@@ -106,16 +110,12 @@ std::ostream& operator<<(std::ostream& os, Variable::Type type);
 namespace std {
 template <>
 struct less<smats::Variable> {
-  bool operator()(const smats::Variable& lhs, const smats::Variable& rhs) const {
-    return lhs.less(rhs);
-  }
+  bool operator()(const smats::Variable& lhs, const smats::Variable& rhs) const { return lhs.less(rhs); }
 };
 
 template <>
 struct equal_to<smats::Variable> {
-  bool operator()(const smats::Variable& lhs, const smats::Variable& rhs) const {
-    return lhs.equal_to(rhs);
-  }
+  bool operator()(const smats::Variable& lhs, const smats::Variable& rhs) const { return lhs.equal_to(rhs); }
 };
 
 template <>

@@ -4,7 +4,16 @@ load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
 
 package(default_visibility = ["//visibility:public"])
 
-exports_files(["generate_version_header.bat"])
+exports_files([
+    "generate_version_header.bat",
+    "dwyu_ignore_includes.json",
+])
+
+# IWYU mappings
+filegroup(
+    name = "iwyu_mappings",
+    srcs = ["iwyu_mappings.imp"],
+)
 
 ######################################################################################
 # Custom flags that control build behavior

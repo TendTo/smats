@@ -5,11 +5,9 @@
  */
 #include "smats/symbolic/variables.h"
 
+#include <algorithm>
 #include <iterator>
-#include <numeric>
 #include <utility>
-
-#include "smats/util/hash.hpp"
 
 namespace smats {
 

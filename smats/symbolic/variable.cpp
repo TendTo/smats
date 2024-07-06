@@ -7,7 +7,6 @@
 #include "smats/symbolic/variable.h"
 
 #include <atomic>
-#include <sstream>
 
 #include "smats/util/exception.h"
 
@@ -15,11 +14,11 @@ namespace smats {
 
 Variable::Id Variable::GetNextId(const Variable::Type type) {
   static std::atomic<Variable::Id> next_id{1};
-  const size_t counter = next_id.fetch_add(1);
+  const std::size_t counter = next_id.fetch_add(1);
   // We'll assume that size_t is at least 8 bytes wide, so that we can pack the
   // counter into the lower 7 bytes of `id_` and the `Type` into the upper byte.
   static_assert(sizeof(Id) >= 8);
-  return counter | (static_cast<size_t>(type) << (7 * 8));
+  return counter | (static_cast<std::size_t>(type) << (7 * 8));
 }
 
 Variable::Variable(const std::string& name, const Type type)

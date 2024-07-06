@@ -1,5 +1,9 @@
 #include "smats/lib/gmp.h"
 
+#include <algorithm>
+#include <cmath>
+#include <string>
+
 #include "smats/util/exception.h"
 
 namespace std {

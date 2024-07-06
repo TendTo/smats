@@ -18,6 +18,9 @@ bazel_dep(name = "argparse", version = "3.0.0")
 # C++ library for formatting strings
 bazel_dep(name = "fmt", version = "10.2.1")
 
+# Apache License 2.0 | rules_foreign_cc for building C++ libraries with other build systems
+bazel_dep(name = "rules_foreign_cc", version = "0.10.1")
+
 # Google C++ Style Guide
 bazel_dep(name = "cpplint", version = "1.6.1", dev_dependency = True)
 
@@ -27,8 +30,16 @@ bazel_dep(name = "googletest", version = "1.14.0", dev_dependency = True)
 # Doxygen documentation generator
 bazel_dep(name = "rules_doxygen", version = "1.1.1", dev_dependency = True)
 
-# Apache License 2.0 | rules_foreign_cc for building C++ libraries with other build systems
-bazel_dep(name = "rules_foreign_cc", version = "0.10.1")
+# Depend on What You Use
+bazel_dep(name = "depend_on_what_you_use", version = "0.4.0", dev_dependency = True)
+
+# Include What You Use
+bazel_dep(name = "bazel_iwyu", version = "0.0.1", dev_dependency = True)
+git_override(
+    module_name = "bazel_iwyu",
+    commit = "85cbd99369a3ed3f8c31234d2d887026f3e66bbc",
+    remote = "https://github.com/TendTo/bazel_iwyu",
+)
 
 #################################################################################
 # External dependencies not available in the Bazel registry

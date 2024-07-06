@@ -7,15 +7,15 @@
  * Represents a symbolic environment (mapping from a variable to a value).
  */
 #pragma once
-
+#include <algorithm>
+#include <cstddef>
+#include <initializer_list>
 #include <ostream>
 #include <span>
-#include <string>
 #include <unordered_map>
 
 #include "smats/symbolic/variable.h"
 #include "smats/symbolic/variables.h"
-#include "smats/util/concepts.h"
 
 namespace smats {
 /** Represents a symbolic environment (mapping from a variable to a value).
@@ -125,7 +125,7 @@ class Environment {
   /** @checker{empty, environment} */
   [[nodiscard]] bool empty() const { return map_.empty(); }
   /** @getter{number of elements, environment} */
-  [[nodiscard]] size_t size() const { return map_.size(); }
+  [[nodiscard]] std::size_t size() const { return map_.size(); }
   /** @getter{domain, environment} */
   [[nodiscard]] Variables domain() const;
 

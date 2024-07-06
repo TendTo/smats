@@ -4,14 +4,14 @@
  * @licence Apache-2.0 license
  */
 #pragma once
+// IWYU pragma: no_include <string_view>
 
-#include <functional>
 #include <initializer_list>
 #include <ostream>
 #include <set>
-#include <string>
 
 #include "smats/symbolic/variable.h"
+#include "smats/util/concepts.h"
 #include "smats/util/hash.hpp"
 
 namespace smats {
@@ -165,7 +165,6 @@ std::ostream& operator<<(std::ostream&, const Variables& vars);
 }  // namespace smats
 
 namespace std {
-/* Provides std::hash<drake::symbolic::Variables>. */
 template <>
 struct hash<smats::Variables> : public smats::DefaultHash {};
 }  // namespace std

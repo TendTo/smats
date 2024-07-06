@@ -5,7 +5,7 @@
  * @licence Apache-2.0 license
  * @brief Hash functions
  *
- * Dlinear implements the hash_append pattern as described by N3980, based on Drake's implementation.
+ * smats implements the hash_append pattern as described by N3980, based on Drake's implementation.
  * For more information, refer to [N3980](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n3980.html).
  *
  * To provide hash_append support within a class, the class must implement a `hash_append` function.

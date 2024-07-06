@@ -65,3 +65,12 @@ bazel cquery "@bazel_tools//tools/cpp:compiler" --output starlark --starlark:exp
 bazel query --noimplicit_deps --notool_deps 'deps(//smats)'
 ```
 
+```bash
+# Check the include directives
+CXX=clang bazel build --config=iwyu //smats/...
+```
+
+```bash
+# Check the target dependencies
+bazel build --config=dwyu //smats
+```
