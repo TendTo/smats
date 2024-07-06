@@ -35,7 +35,6 @@ smats_cc_library(
     deps = [
         ":variable",
         ":variables",
-        "//smats/lib:gmp",
     ],
 )
 
