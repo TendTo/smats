@@ -15,3 +15,23 @@ build:linux --workspace_status_command=tools/workspace_status.sh
 
 build:macos --cxxopt=-std=c++20
 build:macos --workspace_status_command=tools/workspace_status.sh
+
+# Debug build
+build:debug --cxxopt=-O0
+build:debug --cxxopt=-p
+build:debug --cxxopt=-ggdb3
+build:debug --compilation_mode=dbg
+
+# Optimized build
+build:opt --cxxopt=-O3
+build:opt --cxxopt=-DNDEBUG
+build:opt --cxxopt=-DNLOG
+
+# IWYU
+build:iwyu --@bazel_iwyu//:iwyu_mappings=@dlinear//tools:iwyu_mappings
+build:iwyu --aspects @bazel_iwyu//bazel/iwyu:iwyu.bzl%iwyu_aspect
+build:iwyu --output_groups=report
+build:iwyu --build_tag_filters=-no-iwyu
+
+# DWYU
+build:dwyu --aspects=//tools:dwyu.bzl%dwyu --output_groups=dwyu
