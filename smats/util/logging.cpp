@@ -14,14 +14,14 @@
 
 namespace smats {
 
-std::shared_ptr<spdlog::logger> get_logger(LoggerType logger_type) {
+std::shared_ptr<spdlog::logger> get_logger(const bool to_stdout) {
   // Checks if there exists a logger with the name. If it exists, return it.
-  const char *logger_name = logger_type == LoggerType::OUT ? "smats_out" : "smats_err";
+  const char *logger_name = to_stdout ? "smats_out" : "smats_err";
   std::shared_ptr<spdlog::logger> logger{spdlog::get(logger_name)};
   if (logger) return logger;
 
   // Create and return a new logger.
-  logger = logger_type == LoggerType::OUT ? spdlog::stdout_color_mt(logger_name) : spdlog::stderr_color_mt(logger_name);
+  logger = to_stdout ? spdlog::stdout_color_mt(logger_name) : spdlog::stderr_color_mt(logger_name);
 
   // Turn it off by default so that external programs using this as a library do not see internal loggings.
   logger->set_level(spdlog::level::off);

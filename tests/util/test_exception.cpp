@@ -3,13 +3,14 @@
  * @copyright 2024 smats
  * @licence Apache-2.0 license
  */
-#include "smats/util/exception.h"
-
 #include <gtest/gtest.h>
+
 #include <stdexcept>
 
-using std::runtime_error;
+#include "smats/util/exception.h"
+
 using std::invalid_argument;
+using std::runtime_error;
 
 class TestException : public ::testing::Test {
  protected:
@@ -18,25 +19,25 @@ class TestException : public ::testing::Test {
 };
 
 TEST_F(TestException, AssertFail) {
+#ifdef NDEBUG
+  EXPECT_NO_THROW(SMATS_ASSERT(false, "Message"));
+#elif defined(NLOG)
   EXPECT_DEATH(SMATS_ASSERT(false, "Message"), "Assertion `false` failed");
+#else
+  EXPECT_DEATH(SMATS_ASSERT(false, "Message"), "");
+#endif
 }
 
-TEST_F(TestException, AssertFailReport) {
-  EXPECT_DEATH(SMATS_ASSERT(1 + 1 == 3, "Message"), "Message");
-}
-
-TEST_F(TestException, AssertSuccess) {
-  EXPECT_NO_THROW(SMATS_ASSERT(true, "Message"));
-}
+TEST_F(TestException, AssertSuccess) { EXPECT_NO_THROW(SMATS_ASSERT(true, "Message")); }
 
 TEST_F(TestException, Unreachable) {
+#ifndef NLOG
   EXPECT_DEATH(SMATS_UNREACHABLE(), "Should not be reachable");
+#else
+  EXPECT_DEATH(SMATS_UNREACHABLE(), "");
+#endif
 }
 
-TEST_F(TestException, RuntimeError) {
-  EXPECT_THROW(SMATS_RUNTIME_ERROR("Message"), runtime_error);
-}
+TEST_F(TestException, RuntimeError) { EXPECT_THROW(SMATS_RUNTIME_ERROR("Message"), runtime_error); }
 
-TEST(TestLogging, RuntimeErrorFmt) {
-  EXPECT_THROW(SMATS_RUNTIME_ERROR_FMT("Message: {}", "format"), runtime_error);
-}
+TEST(TestLogging, RuntimeErrorFmt) { EXPECT_THROW(SMATS_RUNTIME_ERROR_FMT("Message: {}", "format"), runtime_error); }

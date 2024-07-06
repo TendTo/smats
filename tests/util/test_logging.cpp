@@ -54,6 +54,8 @@ TEST(TestLogging, CriticalFmt) {
     EXPECT_NO_THROW(SMATS_CRITICAL_FMT("TestLogging::Critical{}", "Fmt"));
 }
 
+#ifndef NLOG
+
 TEST(TestLogging, LogInit) {
     EXPECT_NO_THROW(SMATS_LOG_INIT_LEVEL(spdlog::level::trace));
 }
@@ -68,3 +70,5 @@ TEST(TestLogging, VerbosityToLogLevel) {
     EXPECT_EQ(SMATS_VERBOSITY_TO_LOG_LEVEL(6), spdlog::level::off);
     EXPECT_EQ(SMATS_VERBOSITY_TO_LOG_LEVEL(-1), spdlog::level::off);
 }
+
+#endif
