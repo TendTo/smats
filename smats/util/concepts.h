@@ -82,4 +82,19 @@ concept Hashable = requires(T t, U& hasher) {
   { t.hash(hasher) } noexcept -> std::same_as<void>;
 } && InvocableHashAlgorithm<U>;
 
+/**
+ * Check if the type T can be used to create a span
+ * @tparam T type to check
+ */
+template <class T>
+concept Spannable = std::ranges::contiguous_range<T> && std::ranges::sized_range<T>;
+
+/**
+ * Check if the type T can be used to create a span of type U
+ * @tparam T type to check
+ * @tparam U type of elements in the span
+ */
+template <class T, class U>
+concept SpannableOfType = Spannable<T> && std::same_as<U, std::ranges::range_value_t<T>>;
+
 }  // namespace smats
