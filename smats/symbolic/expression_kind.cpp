@@ -6,69 +6,44 @@
  */
 #include "smats/symbolic/expression_kind.h"
 
+#include <map>
+
 #include "smats/util/exception.h"
 
 namespace smats {
 
+std::map<ExpressionKind, std::string> expression_kind_to_string = {
+    {ExpressionKind::Constant, "Constant"},
+    {ExpressionKind::Var, "Var"},
+    {ExpressionKind::Add, "Add"},
+    {ExpressionKind::Mul, "Mul"},
+    {ExpressionKind::Div, "Div"},
+    {ExpressionKind::Pow, "Pow"},
+    {ExpressionKind::Sin, "Sin"},
+    {ExpressionKind::Cos, "Cos"},
+    {ExpressionKind::Tan, "Tan"},
+    {ExpressionKind::Asin, "Asin"},
+    {ExpressionKind::Acos, "Acos"},
+    {ExpressionKind::Atan, "Atan"},
+    {ExpressionKind::Atan2, "Atan2"},
+    {ExpressionKind::Sinh, "Sinh"},
+    {ExpressionKind::Cosh, "Cosh"},
+    {ExpressionKind::Tanh, "Tanh"},
+    {ExpressionKind::Log, "Log"},
+    {ExpressionKind::Exp, "Exp"},
+    {ExpressionKind::Sqrt, "Sqrt"},
+    {ExpressionKind::Abs, "Abs"},
+    {ExpressionKind::Floor, "Floor"},
+    {ExpressionKind::Ceil, "Ceil"},
+    {ExpressionKind::Min, "Min"},
+    {ExpressionKind::Max, "Max"},
+    {ExpressionKind::IfThenElse, "IfThenElse"},
+    {ExpressionKind::NaN, "NaN"},
+    {ExpressionKind::UninterpretedFunction, "UninterpretedFunction"}};
+
 std::ostream &operator<<(std::ostream &os, const ExpressionKind &kind) {
-  switch (kind) {
-    case ExpressionKind::Constant:
-      return os << "Constant";
-    case ExpressionKind::Var:
-      return os << "Var";
-    case ExpressionKind::Add:
-      return os << "Add";
-    case ExpressionKind::Mul:
-      return os << "Mul";
-    case ExpressionKind::Div:
-      return os << "Div";
-    case ExpressionKind::Pow:
-      return os << "Pow";
-    case ExpressionKind::Sin:
-      return os << "Sin";
-    case ExpressionKind::Cos:
-      return os << "Cos";
-    case ExpressionKind::Tan:
-      return os << "Tan";
-    case ExpressionKind::Asin:
-      return os << "Asin";
-    case ExpressionKind::Acos:
-      return os << "Acos";
-    case ExpressionKind::Atan:
-      return os << "Atan";
-    case ExpressionKind::Atan2:
-      return os << "Atan2";
-    case ExpressionKind::Sinh:
-      return os << "Sinh";
-    case ExpressionKind::Cosh:
-      return os << "Cosh";
-    case ExpressionKind::Tanh:
-      return os << "Tanh";
-    case ExpressionKind::Log:
-      return os << "Log";
-    case ExpressionKind::Exp:
-      return os << "Exp";
-    case ExpressionKind::Sqrt:
-      return os << "Sqrt";
-    case ExpressionKind::Abs:
-      return os << "Abs";
-    case ExpressionKind::Floor:
-      return os << "Floor";
-    case ExpressionKind::Ceil:
-      return os << "Ceil";
-    case ExpressionKind::Min:
-      return os << "Min";
-    case ExpressionKind::Max:
-      return os << "Max";
-    case ExpressionKind::IfThenElse:
-      return os << "IfThenElse";
-    case ExpressionKind::NaN:
-      return os << "NaN";
-    case ExpressionKind::UninterpretedFunction:
-      return os << "UninterpretedFunction";
-    default:
-      SMATS_UNREACHABLE();
-  }
+  SMATS_ASSERT(expression_kind_to_string.contains(kind), "Unknown ExpressionKind");
+  return os << expression_kind_to_string.at(kind);
 }
 
 }  // namespace smats
