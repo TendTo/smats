@@ -16,8 +16,46 @@ class TestEnvironment : public ::testing::Test {
   Environment<T> env_;
 };
 
-using TestParams = ::testing::Types<int, float, double, mpq_class>;
+using TestParams = ::testing::Types<int, long, float, double>;
 TYPED_TEST_SUITE(TestEnvironment, TestParams);
+
+TYPED_TEST(TestEnvironment, KeyValueConstructors) {
+  Environment<TypeParam> env_initializer_list{{this->x_, this->x_.id()}, {this->y_, this->y_.id()}};
+  Environment<TypeParam> env_vector(
+      std::vector<std::pair<const Variable, TypeParam>>{{this->x_, this->x_.id()}, {this->y_, this->y_.id()}});
+  Environment<TypeParam> env_array(std::array<std::pair<const Variable, TypeParam>, 2>{
+      std::pair{this->x_, this->x_.id()}, std::pair{this->y_, this->y_.id()}});
+  const std::pair<const Variable, TypeParam> arr[] = {{this->x_, this->x_.id()}, {this->y_, this->y_.id()}};
+  Environment<TypeParam> env_arr(arr);
+
+  EXPECT_EQ(env_initializer_list.size(), 2u);
+  EXPECT_TRUE(env_initializer_list.contains(this->x_));
+  EXPECT_TRUE(env_initializer_list.contains(this->y_));
+  EXPECT_EQ(env_initializer_list.at(this->x_), static_cast<TypeParam>(this->x_.id()));
+  EXPECT_EQ(env_initializer_list.at(this->y_), static_cast<TypeParam>(this->y_.id()));
+
+  EXPECT_EQ(env_initializer_list, env_vector);
+  EXPECT_EQ(env_initializer_list, env_array);
+  EXPECT_EQ(env_initializer_list, env_arr);
+}
+
+TYPED_TEST(TestEnvironment, KeyConstructors) {
+  Environment<TypeParam> env_initializer_list{this->x_, this->y_};
+  Environment<TypeParam> env_vector(std::vector<Variable>{this->x_, this->y_});
+  Environment<TypeParam> env_array(std::array<Variable, 2>{this->x_, this->y_});
+  const Variable arr[] = {this->x_, this->y_};
+  Environment<TypeParam> env_arr(arr);
+
+  EXPECT_EQ(env_initializer_list.size(), 2u);
+  EXPECT_TRUE(env_initializer_list.contains(this->x_));
+  EXPECT_TRUE(env_initializer_list.contains(this->y_));
+  EXPECT_EQ(env_initializer_list.at(this->x_), 0);
+  EXPECT_EQ(env_initializer_list.at(this->y_), 0);
+
+  EXPECT_EQ(env_initializer_list, env_vector);
+  EXPECT_EQ(env_initializer_list, env_array);
+  EXPECT_EQ(env_initializer_list, env_arr);
+}
 
 TYPED_TEST(TestEnvironment, InsertAndAccess) {
   this->env_.insert(this->x_, 2.0);

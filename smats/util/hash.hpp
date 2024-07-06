@@ -1,5 +1,4 @@
 /**
- * @file Variable.cpp
  * @author smats (https://github.com/TendTo/smats)
  * @copyright 2024 smats
  * @copyright 2019 Drake (https://drake.mit.edu)
