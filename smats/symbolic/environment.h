@@ -1,5 +1,5 @@
 /**
- * @author smats (https://github.com/TendTo/smats)
+ * @author Ernesto Casablanca (casablancaernesto@gmail.com)
  * @copyright 2024 smats
  * @licence Apache-2.0 license
  * Environment class
@@ -7,6 +7,7 @@
  * Represents a symbolic environment (mapping from a variable to a value).
  */
 #pragma once
+
 #include <algorithm>
 #include <cstddef>
 #include <initializer_list>

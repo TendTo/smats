@@ -1,7 +1,8 @@
 /**
- * @author smats (https://github.com/TendTo/smats)
+ * @author Ernesto Casablanca (casablancaernesto@gmail.com)
  * @copyright 2024 smats
  * @licence Apache-2.0 license
+ * Import the necessary headers for the GMP library.
  */
 #pragma once
 

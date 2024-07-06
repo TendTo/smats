@@ -1,5 +1,5 @@
 /**
- * @author smats (https://github.com/TendTo/smats)
+ * @author Ernesto Casablanca (casablancaernesto@gmail.com)
  * @copyright 2024 smats
  * @copyright 2019 Drake (https://drake.mit.edu)
  * @licence Apache-2.0 license

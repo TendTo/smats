@@ -69,7 +69,7 @@ concept InvocableHashAlgorithm = requires(T t, const void* data, size_t length) 
   typename T::result_type;
   { t(data, length) } noexcept -> std::same_as<void>;
   { size_t() } noexcept -> std::same_as<typename T::result_type>;
-};
+};  // NOLINT(readability/braces) per C++ standard concept definition
 
 /**
  * Check if the type T is hashable, meaning it is not a simple type

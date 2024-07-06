@@ -6,6 +6,7 @@
 #include "smats/symbolic/variables.h"
 
 #include <algorithm>
+#include <functional>  // IWYU pragma: keep
 #include <iterator>
 #include <utility>
 

@@ -42,7 +42,9 @@ void IterationStats::increase() {
 std::string IterationStats::to_segment_string() const {
   return SMATS_FORMAT(SMATS_ITERATION_STATS_FMT, iterations_name_, class_name_, iterations_.load());
 }
-std::string IterationStats::to_string() const { return IterationStats::to_segment_string() + "\n" + Stats::to_string(); }
+std::string IterationStats::to_string() const {
+  return IterationStats::to_segment_string() + "\n" + Stats::to_string();
+}
 
 IterationStats::IterationStats(bool enabled, std::string class_name, std::string operations_name,
                                std::string iterations_name)
