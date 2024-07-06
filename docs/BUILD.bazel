@@ -2,7 +2,7 @@ load("@doxygen//:doxygen.bzl", "doxygen")
 load("//tools:rules_cc.bzl", "SMATS_NAME", "SMATS_VERSION")
 
 doxygen(
-    name = "doxygen",
+    name = "docs",
     srcs = [
         "README.md",
         "//smats:all_srcs",
