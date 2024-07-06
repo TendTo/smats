@@ -46,7 +46,7 @@ class Environment {
  public:
   using key_type = Variable;
   using mapped_type = T;
-  using map = std::unordered_map<key_type, mapped_type>;
+  using map = std::unordered_map<key_type, T>;
   using value_type = map::value_type;
   using iterator = map::iterator;
   using const_iterator = map::const_iterator;
@@ -115,13 +115,13 @@ class Environment {
    * @param key key to insert
    * @param elem value to insert
    */
-  void insert(const key_type& key, const mapped_type& elem);
+  void insert(const key_type& key, const T& elem);
   /**
    * Insert a pair (@p key, @p elem) or assign @p elem to the existing key if it exists.
    * @param key key to insert
    * @param elem value to insert
    */
-  void insert_or_assign(const key_type& key, const mapped_type& elem);
+  void insert_or_assign(const key_type& key, const T& elem);
 
   /** @checker{empty, environment} */
   [[nodiscard]] bool empty() const { return map_.empty(); }
@@ -155,14 +155,14 @@ class Environment {
    * @return reference to the mapped value of the requested key
    * @throws std::out_of_range if the key does not exist
    */
-  [[nodiscard]] const mapped_type& at(const key_type& key) const;
+  [[nodiscard]] const T& at(const key_type& key) const;
 
   /**
    * Returns a reference to the value that is mapped to a key equivalent to @p key,
    * performing an insertion if such key does not already exist.
    * @param key key of the element to find or insert
    */
-  mapped_type& operator[](const key_type& key);
+  T& operator[](const key_type& key);
 
   /**
    * Returns a constant reference to the value that is mapped to a key equivalent to @p key.
@@ -170,7 +170,7 @@ class Environment {
    * @return reference to the mapped value of the requested key
    * @throws std::out_of_range if the key does not exist
    */
-  const mapped_type& operator[](const key_type& key) const;
+  const T& operator[](const key_type& key) const;
 
   bool operator==(const Environment<T>& other) const;
 

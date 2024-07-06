@@ -48,13 +48,13 @@ Environment<T>::Environment(map m) : map_{std::move(m)} {
 }
 
 template <class T>
-void Environment<T>::insert(const key_type& key, const mapped_type& elem) {
+void Environment<T>::insert(const key_type& key, const T& elem) {
   if (key.is_dummy()) SMATS_RUNTIME_ERROR("Cannot insert dummy variable into Environment");
   map_.emplace(key, elem);
 }
 
 template <class T>
-void Environment<T>::insert_or_assign(const key_type& key, const mapped_type& elem) {
+void Environment<T>::insert_or_assign(const key_type& key, const T& elem) {
   if (key.is_dummy()) SMATS_RUNTIME_ERROR("Cannot insert dummy variable into Environment");
   map_.insert_or_assign(key, elem);
 }
@@ -67,17 +67,17 @@ Variables Environment<T>::domain() const {
 }
 
 template <class T>
-const Environment<T>::mapped_type& Environment<T>::at(const key_type& key) const {
+const T& Environment<T>::at(const key_type& key) const {
   return map_.at(key);
 }
 
 template <class T>
-Environment<T>::mapped_type& Environment<T>::operator[](const key_type& key) {
+T& Environment<T>::operator[](const key_type& key) {
   return map_[key];
 }
 
 template <class T>
-const Environment<T>::mapped_type& Environment<T>::operator[](const key_type& key) const {
+const T& Environment<T>::operator[](const key_type& key) const {
   return map_.at(key);
 }
 
