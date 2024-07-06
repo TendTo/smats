@@ -49,4 +49,15 @@ smats_cc_library(
     deps = ["//smats/util:logging"],
 )
 
+smats_cc_library(
+    name = "symbolic",
+    hdrs = ["symbolic.h"],
+    deps = [
+        ":environment",
+        ":expression_kind",
+        ":variable",
+        ":variables",
+    ],
+)
+
 cpplint()
