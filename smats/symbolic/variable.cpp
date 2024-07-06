@@ -12,7 +12,7 @@
 
 namespace smats {
 
-Variable::Id Variable::GetNextId(const Variable::Type type) {
+Variable::Id Variable::get_next_id(const Variable::Type type) {
   static std::atomic<Variable::Id> next_id{1};
   const std::size_t counter = next_id.fetch_add(1);
   // We'll assume that size_t is at least 8 bytes wide, so that we can pack the
@@ -22,7 +22,7 @@ Variable::Id Variable::GetNextId(const Variable::Type type) {
 }
 
 Variable::Variable(const std::string& name, const Type type)
-    : id_{GetNextId(type)}, name_{std::make_shared<const std::string>(name)} {
+    : id_{get_next_id(type)}, name_{std::make_shared<const std::string>(name)} {
   SMATS_ASSERT(id_ > 0, "Variable ID must be greater than 0");
 }
 

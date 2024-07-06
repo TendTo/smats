@@ -16,12 +16,12 @@
 
 namespace smats {
 
-/** Represents a set of variables.
+/**
+ * Represents a set of variables.
  *
- * This class is based on std::set<Variable>. The intent is to add things that
- * we need including set-union (Variables::insert, operator+, operator+=),
- * set-minus (Variables::erase, operator-, operator-=), and subset/superset
- * checking functions (Variables::IsSubsetOf, Variables::IsSupersetOf,
+ * This class is based on std::set<Variable>, with the addition of some utilities such as
+ * set-union (Variables::insert, operator+, operator+=), set-minus (Variables::erase, operator-, operator-=)
+ * and subset/superset checking functions (Variables::IsSubsetOf, Variables::IsSupersetOf,
  * Variables::IsStrictSubsetOf, Variables::IsStrictSupersetOf).
  */
 class Variables {
@@ -119,31 +119,16 @@ class Variables {
    * @return const_iterator to the element with key equivalent to @p key
    */
   [[nodiscard]] const_iterator find(const Variable& key) const { return vars_.find(key); }
-  /**
-   * @checker{contained in the set, variable @p key }
-   * @param key variable to check
-   */
+  /** @checker{contained in the set, variable @p key, @param key variable to check} */
   [[nodiscard]] bool contains(const Variable& key) const { return find(key) != end(); }
 
-  /**
-   * @checker{subset of @p vars, this set of variables}
-   * @param vars set of variables
-   */
+  /** @checker{subset of @p vars, this set of variables, @param vars variable set to compare against} */
   [[nodiscard]] bool is_subset_of(const Variables& vars) const;
-  /**
-   * @checker{superset of @p vars, this set of variables}
-   * @param vars set of variables
-   */
+  /** @checker{superset of @p vars, this set of variables, @param vars variable set to compare against} */
   [[nodiscard]] bool is_superset_of(const Variables& vars) const;
-  /**
-   * @checker{strict subset of @p vars, this set of variables}
-   * @param vars set of variables
-   */
+  /** @checker{strict subset of @p vars, this set of variables, @param vars variable set to compare against} */
   [[nodiscard]] bool is_strict_subset_of(const Variables& vars) const;
-  /**
-   * @checker{strict superset of @p vars, this set of variables}
-   * @param vars set of variables
-   */
+  /** @checker{strict superset of @p vars, this set of variables, @param vars variable set to compare against} */
   [[nodiscard]] bool is_strict_superset_of(const Variables& vars) const;
 
   bool operator==(const Variables& vars) const;

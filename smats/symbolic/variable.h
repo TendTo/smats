@@ -28,6 +28,8 @@ namespace smats {
  * Represents a symbolic variable.
  *
  * A symbolic variable is a named entity that can take a value from a specific domain.
+ * @warning Do not use the @p operator== to verify equality between to Variable, as it creates a Formula.
+ * Use the @ref equal_to() method instead.
  */
 class Variable {
  public:
@@ -44,11 +46,12 @@ class Variable {
   /**
    * Construct a dummy variable.
    *
-   * All default-constructed variables are considered the same variable by the equality operator (==).
-   * Similarly, a moved-from variable becomes a dummy variable.
+   * All default-constructed variables are considered the same variable by the @ref equal_to method.
+   * A moved-from variable becomes a dummy variable.
    */
   Variable() : id_{0}, name_{nullptr} {};
-  /** Constructs a variable with a string.
+  /**
+   * Constructs a variable with a string.
    * @param name name of the variable.
    * @param type type of the variable.
    */
@@ -71,12 +74,12 @@ class Variable {
   [[nodiscard]] bool is_dummy() const { return id_ == 0; }
   /** @getter{unique identifier, variable}*/
   [[nodiscard]] Id id() const { return id_; }
-  /** @getter{type, variable, The type is stored in the upper byte of @ref id_ ., GetNextId()}*/
+  /** @getter{type, variable, The type is stored in the upper byte of @ref id_ ., get_next_id()}*/
   [[nodiscard]] Type type() const { return static_cast<Type>(Id{id_} >> (7 * 8)); }
   /** @getter{name, variable} */
   [[nodiscard]] std::string name() const;
 
-  /** @less{variables, Two variables are equal if they have the same @ref id_ .} */
+  /** @equal_to{variables, Two variables are equal if they have the same @ref id_ .} */
   [[nodiscard]] inline bool equal_to(const Variable& o) const noexcept { return id_ == o.id_; }
   /** @less{variables, The ordering is based on the @ref id_ values of the two variables.} */
   [[nodiscard]] inline bool less(const Variable& o) const noexcept { return id_ < o.id_; }
@@ -90,14 +93,15 @@ class Variable {
    * The unique identifier is a 64-bit value that is composed of two parts:
    * - The first high-order byte stores the @ref Type of the variable
    * - The remaining low-order bytes store a counter that is incremented each time a new variable is created.
+   *
    * @note Id 0 is reserved for anonymous variable which is created by the default constructor, @ref Variable().
-   * As a result, the invariant `GetNextId() > 0` is guaranteed.
+   * As a result, the invariant `get_next_id() > 0` is guaranteed.
    * @param type type of the variable
    * @return next unique identifier for a variable
    */
-  static Id GetNextId(Type type);
+  static Id get_next_id(const Variable::Type type);
 
-  Id id_;  ///< Unique identifier for the variable. The high-order byte stores the Type. @see GetNextId()
+  Id id_;  ///< Unique identifier for the variable. The high-order byte stores the Type. @see get_next_id()
   std::shared_ptr<const std::string> name_;  ///< Name of the variable.
 };
 

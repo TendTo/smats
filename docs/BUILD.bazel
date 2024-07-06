@@ -4,7 +4,7 @@ load("//tools:rules_cc.bzl", "SMATS_NAME", "SMATS_VERSION")
 doxygen(
     name = "docs",
     srcs = [
-        "README.md",
+        "//:README.md",
         "//smats:all_srcs",
     ] + glob([
         "_static/*",
@@ -47,7 +47,7 @@ doxygen(
         "docs/_static/mermaid.dist.js",
     ],
     html_extra_stylesheet = [
-        "docs/_static/theme.css",
+        "docs/_static/doxygen-awesome.css",
         "docs/_static/mermaid",
     ],
     html_footer = "docs/_static/footer.html",

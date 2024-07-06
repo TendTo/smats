@@ -3,7 +3,11 @@ load("//tools:rules_cc.bzl", "SMATS_NAME", "SMATS_VERSION", "smats_cc_binary", "
 
 smats_srcs(
     name = "srcs",
-    deps = ["//smats/util:all_srcs"],
+    deps = [
+        "//smats/lib:all_srcs",
+        "//smats/symbolic:all_srcs",
+        "//smats/util:all_srcs",
+    ],
 )
 
 genrule(

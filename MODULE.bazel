@@ -28,7 +28,7 @@ bazel_dep(name = "cpplint", version = "1.6.1", dev_dependency = True)
 bazel_dep(name = "googletest", version = "1.14.0", dev_dependency = True)
 
 # Doxygen documentation generator
-bazel_dep(name = "rules_doxygen", version = "1.1.1", dev_dependency = True)
+bazel_dep(name = "rules_doxygen", version = "1.1.2", dev_dependency = True)
 
 # Depend on What You Use
 bazel_dep(name = "depend_on_what_you_use", version = "0.4.0", dev_dependency = True)

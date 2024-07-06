@@ -4,3 +4,9 @@
  * @licence Apache-2.0 license
  */
 #pragma once
+
+/**
+ * @namespace smats
+ * The main namespace for the smats library.
+ */
+namespace smats {}
