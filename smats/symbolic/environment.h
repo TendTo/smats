@@ -8,14 +8,14 @@
  */
 #pragma once
 
-#include <initializer_list>
 #include <ostream>
+#include <span>
 #include <string>
 #include <unordered_map>
 
-#include "smats/lib/gmp.h"
 #include "smats/symbolic/variable.h"
 #include "smats/symbolic/variables.h"
+#include "smats/util/concepts.h"
 
 namespace smats {
 /** Represents a symbolic environment (mapping from a variable to a value).
@@ -58,7 +58,14 @@ class Environment {
    * @param init initializer list of (Variable, numeric_type)
    * @throws std::runtime_exception if @p init include a dummy variable or a NaN value.
    */
-  Environment(std::initializer_list<value_type> init);
+  explicit Environment(std::initializer_list<value_type> init);
+
+  /**
+   * Construct a new environment object from a list of (Variable, numeric_type).
+   * @param init initializer list of (Variable, numeric_type)
+   * @throws std::runtime_exception if @p init include a dummy variable or a NaN value.
+   */
+  explicit Environment(std::span<const value_type> init);
 
   /**
    * Construct a new environment object from a list of variables.
@@ -67,7 +74,16 @@ class Environment {
    * @param vars initializer list of variables
    * @throws std::runtime_exception if @p vars include a dummy variable.
    */
-  Environment(std::initializer_list<key_type> vars);
+  explicit Environment(std::initializer_list<key_type> vars);
+
+  /**
+   * Construct a new environment object from a list of variables.
+   *
+   * Initializes the variables with 0.0.
+   * @param vars initializer list of variables
+   * @throws std::runtime_exception if @p vars include a dummy variable.
+   */
+  explicit Environment(std::span<const key_type> vars);
 
   /**
    * Construct a new environment object from the map @p m between variables and values.
@@ -113,6 +129,12 @@ class Environment {
   /** @getter{domain, environment} */
   [[nodiscard]] Variables domain() const;
 
+  /** Check if the environment contains the @p key.
+   * @param key key to check
+   * @return true if the environment contains @p key
+   * @return false if the environment doesn't contain @p key
+   */
+  [[nodiscard]] bool contains(const key_type& key) const { return map_.contains(key); }
   /**
    * Finds element with specific key.
    * @param key key to find
@@ -149,6 +171,8 @@ class Environment {
    */
   const mapped_type& operator[](const key_type& key) const;
 
+  bool operator==(const Environment<T>& other) const;
+
  private:
   map map_;  ///< map between variables and values
 };
@@ -160,6 +184,10 @@ using EnvironmentI = Environment<int>;
 using EnvironmentL = Environment<long>;
 using EnvironmentF = Environment<float>;
 using EnvironmentD = Environment<double>;
-using EnvironmentR = Environment<mpq_class>;
+
+extern template class Environment<int>;
+extern template class Environment<long>;
+extern template class Environment<float>;
+extern template class Environment<double>;
 
 }  // namespace smats

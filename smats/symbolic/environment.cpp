@@ -20,7 +20,7 @@ namespace {
  * @return Environment::map
  */
 template <class T>
-typename Environment<T>::map BuildMap(const std::initializer_list<typename Environment<T>::key_type> vars) {
+typename Environment<T>::map BuildMap(const std::span<const typename Environment<T>::key_type> vars) {
   typename Environment<T>::map m;
   for (const typename Environment<T>::key_type& var : vars) m.emplace(var, 0.0);
   return m;
@@ -32,7 +32,14 @@ template <class T>
 Environment<T>::Environment(const std::initializer_list<value_type> init) : Environment<T>{map(init)} {}
 
 template <class T>
-Environment<T>::Environment(const std::initializer_list<key_type> vars) : Environment{BuildMap<T>(vars)} {}
+Environment<T>::Environment(std::span<const value_type> init) : Environment{map(init.begin(), init.end())} {}
+
+template <class T>
+Environment<T>::Environment(const std::initializer_list<key_type> vars)
+    : Environment{BuildMap<T>(std::span<const key_type>(vars.begin(), vars.end()))} {}
+
+template <class T>
+Environment<T>::Environment(std::span<const key_type> vars) : Environment{BuildMap<T>(vars)} {}
 
 template <class T>
 Environment<T>::Environment(map m) : map_{std::move(m)} {
@@ -75,6 +82,14 @@ const Environment<T>::mapped_type& Environment<T>::operator[](const key_type& ke
 }
 
 template <class T>
+bool Environment<T>::operator==(const Environment<T>& other) const {
+  if (map_.size() != other.map_.size()) return false;
+  return std::all_of(map_.begin(), map_.end(), [&other](const auto& p) {
+    return other.map_.find(p.first) != other.map_.end() && other.map_.at(p.first) == p.second;
+  });
+}
+
+template <class T>
 std::ostream& operator<<(std::ostream& os, const Environment<T>& env) {
   for (const auto& [var, value] : env) os << var << " -> " << value << ", ";
   return os;
@@ -84,12 +99,10 @@ template class Environment<int>;
 template class Environment<long>;
 template class Environment<float>;
 template class Environment<double>;
-template class Environment<mpq_class>;
 
 template std::ostream& operator<<(std::ostream& os, const Environment<int>& env);
 template std::ostream& operator<<(std::ostream& os, const Environment<long>& env);
 template std::ostream& operator<<(std::ostream& os, const Environment<float>& env);
 template std::ostream& operator<<(std::ostream& os, const Environment<double>& env);
-template std::ostream& operator<<(std::ostream& os, const Environment<mpq_class>& env);
 
 }  // namespace smats
