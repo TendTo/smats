@@ -6,7 +6,11 @@
 
 #include "smats/util/timer.h"
 
+#ifndef WIN32
 #include <sys/resource.h>
+#else
+#include <windows.h>
+#endif
 
 #include <stdexcept>
 
@@ -58,12 +62,22 @@ std::chrono::duration<double>::rep TimerBase<T>::seconds() const {
   return std::chrono::duration_cast<std::chrono::duration<double>>(elapsed()).count();
 }
 
+#ifndef WIN32
 user_clock::time_point user_clock::now() {
   SMATS_TRACE("user_clock::now");
   struct rusage usage {};
   if (0 != getrusage(RUSAGE_SELF, &usage)) throw std::runtime_error("Failed to get current resource usage (getrusage)");
   return time_point(duration(uint64_t(usage.ru_utime.tv_sec) * std::micro::den + uint64_t(usage.ru_utime.tv_usec)));
 }
+#else
+user_clock::time_point user_clock::now() {
+  SMATS_TRACE("user_clock::now");
+  FILETIME creation_time, exit_time, kernel_time, user_time;
+  if (!GetProcessTimes(GetCurrentProcess(), &creation_time, &exit_time, &kernel_time, &user_time))
+    throw std::runtime_error("Failed to get current resource usage (GetProcessTimes)");
+  return time_point(duration(uint64_t(user_time.dwHighDateTime) << 32 | user_time.dwLowDateTime));
+}
+#endif
 
 // Explicit instantiations
 template class TimerBase<chosen_steady_clock>;
