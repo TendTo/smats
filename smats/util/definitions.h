@@ -161,3 +161,63 @@
 #define ARITHMETIC_OPERATORS(type)         \
   ARITHMETIC_OPERATORS_DECLARATION(type &) \
   ARITHMETIC_OPERATORS_DEFINITION(type)
+
+/**
+ * Explicitly instantiate a template class @p c for the specified type @p t.
+ * @code
+ * EXPLICIT_TEMPLATE_INSTANTIATION(ClassA, int)
+ * // Becomes
+ * template class ClassA<int>;
+ * @endcode
+ * @param c class to instantiate
+ * @param t type to instantiate the class with
+ */
+#define EXPLICIT_TEMPLATE_INSTANTIATION(c, t) template class c<t>
+
+/**
+ * Explicitly instantiate a template class @p c for the types int, long, float, double.
+ * @code
+ * EXPLICIT_TEMPLATE_INSTANTIATION_NUMERIC(ClassA)
+ * // Becomes
+ * template class ClassA<int>;
+ * template class ClassA<long>;
+ * template class ClassA<float>;
+ * template class ClassA<double>;
+ * @endcode
+ * @param c class to instantiate
+ */
+#define EXPLICIT_TEMPLATE_INSTANTIATION_NUMERIC(c) \
+  EXPLICIT_TEMPLATE_INSTANTIATION(c, int);         \
+  EXPLICIT_TEMPLATE_INSTANTIATION(c, long);        \
+  EXPLICIT_TEMPLATE_INSTANTIATION(c, float);       \
+  EXPLICIT_TEMPLATE_INSTANTIATION(c, double)
+
+/**
+ * Declare an external template instantiation for a template class @p c with the specified type @p t.
+ * @code
+ * EXTERNAL_TEMPLATE_INSTANTIATION(ClassA, int)
+ * // Becomes
+ * extern template class ClassA<int>;
+ * @endcode
+ * @param c class to instantiate
+ * @param t type to instantiate the class with
+ */
+#define EXTERNAL_TEMPLATE_INSTANTIATION(c, t) extern template class c<t>
+
+/**
+ * Declare an external template instantiation for a template class @p c with the types int, long, float, double.
+ * @code
+ * EXTERNAL_TEMPLATE_INSTANTIATION_NUMERIC(ClassA)
+ * // Becomes
+ * extern template class ClassA<int>;
+ * extern template class ClassA<long>;
+ * extern template class ClassA<float>;
+ * extern template class ClassA<double>;
+ * @endcode
+ * @param c class to instantiate
+ */
+#define EXTERNAL_TEMPLATE_INSTANTIATION_NUMERIC(c) \
+  EXTERNAL_TEMPLATE_INSTANTIATION(c, int);         \
+  EXTERNAL_TEMPLATE_INSTANTIATION(c, long);        \
+  EXTERNAL_TEMPLATE_INSTANTIATION(c, float);       \
+  EXTERNAL_TEMPLATE_INSTANTIATION(c, double)

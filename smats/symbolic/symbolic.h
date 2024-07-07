@@ -10,6 +10,7 @@
 
 // IWYU pragma: begin_exports
 #include "smats/symbolic/environment.h"
+#include "smats/symbolic/expression.h"
 #include "smats/symbolic/expression_kind.h"
 #include "smats/symbolic/variable.h"
 #include "smats/symbolic/variables.h"

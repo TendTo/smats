@@ -52,10 +52,34 @@ smats_cc_library(
 )
 
 smats_cc_library(
+    name = "expression",
+    srcs = [
+        "expression.cpp",
+        "expression_cell.cpp",
+        "expression_cell.h",
+    ],
+    hdrs = ["expression.h"],
+    implementation_deps = [
+        "//smats/util:exception",
+        "//smats/util:logging",
+    ],
+    deps = [
+        ":environment",
+        ":expression_kind",
+        ":variable",
+        ":variables",
+        "//smats/util:concepts",
+        "//smats/util:definitions",
+        "//smats/util:hash",
+    ],
+)
+
+smats_cc_library(
     name = "symbolic",
     hdrs = ["symbolic.h"],
     deps = [
         ":environment",
+        ":expression",
         ":expression_kind",
         ":variable",
         ":variables",
