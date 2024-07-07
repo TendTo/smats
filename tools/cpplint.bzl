@@ -84,6 +84,8 @@ def cpplint(data = None, extra_srcs = None):
     # Iterate over all rules.
     for rule in native.existing_rules().values():
         # Extract the list of C++ source code labels and convert to filenames.
+        if rule.get("kind") != "cc_library":
+            continue
         candidate_labels = (
             _extract_labels(rule.get("srcs", ())) +
             _extract_labels(rule.get("hdrs", ()))
