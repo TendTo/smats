@@ -7,6 +7,7 @@
 #pragma once
 
 #include <map>
+#include <memory>
 
 #include "smats/symbolic/expression.h"
 #include "smats/symbolic/expression_cell.h"

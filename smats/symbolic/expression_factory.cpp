@@ -5,6 +5,8 @@
  */
 #include "smats/symbolic/expression_factory.h"
 
+#include <utility>
+
 #include "smats/symbolic/expression_cell.h"
 #include "smats/util/exception.h"
 

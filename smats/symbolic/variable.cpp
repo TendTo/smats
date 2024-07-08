@@ -13,8 +13,8 @@
 namespace smats {
 
 namespace {
-const std::string dummy_variable_name{"dummy"};
-}
+const std::string dummy_variable_name{"dummy"};  // NOLINT(runtime/string): Used for dummy variable names.
+}  // namespace
 
 Variable::Id Variable::get_next_id(const Variable::Type type) {
   static std::atomic<Variable::Id> next_id{1};
