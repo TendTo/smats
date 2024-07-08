@@ -66,8 +66,8 @@ smats_cc_googletest(
     deps = ["//smats/symbolic:expression_kind"],
 )
 
-# smats_cc_googletest(
-#     name = "test_expression_cell",
-#     tags = ["symbolic"],
-#     deps = ["//smats/symbolic:expression_cell"],
-# )
+smats_cc_googletest(
+    name = "test_expression",
+    tags = ["symbolic"],
+    deps = ["//smats/symbolic:expression"],
+)

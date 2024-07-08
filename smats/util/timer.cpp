@@ -12,8 +12,6 @@
 #include <windows.h>
 #endif
 
-#include <stdexcept>
-
 #include "smats/util/exception.h"
 #include "smats/util/logging.h"
 

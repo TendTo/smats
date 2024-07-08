@@ -45,10 +45,7 @@ smats_cc_library(
     name = "expression_kind",
     srcs = ["expression_kind.cpp"],
     hdrs = ["expression_kind.h"],
-    implementation_deps = [
-        "//smats/util:exception",
-        "//smats/util:logging",
-    ],
+    implementation_deps = ["//smats/util:exception"],
 )
 
 smats_cc_library(
@@ -57,18 +54,19 @@ smats_cc_library(
         "expression.cpp",
         "expression_cell.cpp",
         "expression_cell.h",
+        "expression_factory.cpp",
+        "expression_factory.h",
     ],
     hdrs = ["expression.h"],
     implementation_deps = [
         "//smats/util:exception",
-        "//smats/util:logging",
     ],
+    tags = ["no-iwyu"],
     deps = [
         ":environment",
         ":expression_kind",
         ":variable",
         ":variables",
-        "//smats/util:concepts",
         "//smats/util:definitions",
         "//smats/util:hash",
     ],

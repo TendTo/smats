@@ -77,7 +77,7 @@ class Variable {
   /** @getter{type, variable, The type is stored in the upper byte of @ref id_ ., get_next_id()}*/
   [[nodiscard]] Type type() const { return static_cast<Type>(Id{id_} >> (7 * 8)); }
   /** @getter{name, variable} */
-  [[nodiscard]] std::string name() const;
+  [[nodiscard]] const std::string& name() const;
 
   /** @equal_to{variables, Two variables are equal if they have the same @ref id_ .} */
   [[nodiscard]] inline bool equal_to(const Variable& o) const noexcept { return id_ == o.id_; }
@@ -99,7 +99,7 @@ class Variable {
    * @param type type of the variable
    * @return next unique identifier for a variable
    */
-  static Id get_next_id(const Variable::Type type);
+  static Id get_next_id(Variable::Type type);
 
   Id id_;  ///< Unique identifier for the variable. The high-order byte stores the Type. @see get_next_id()
   std::shared_ptr<const std::string> name_;  ///< Name of the variable.

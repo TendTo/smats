@@ -12,6 +12,10 @@
 
 namespace smats {
 
+namespace {
+const std::string dummy_variable_name{"dummy"};
+}
+
 Variable::Id Variable::get_next_id(const Variable::Type type) {
   static std::atomic<Variable::Id> next_id{1};
   const std::size_t counter = next_id.fetch_add(1);
@@ -26,7 +30,7 @@ Variable::Variable(const std::string& name, const Type type)
   SMATS_ASSERT(id_ > 0, "Variable ID must be greater than 0");
 }
 
-std::string Variable::name() const { return name_ != nullptr ? *name_ : std::string{"dummy"}; }
+const std::string& Variable::name() const { return name_ != nullptr ? *name_ : dummy_variable_name; }
 
 std::ostream& operator<<(std::ostream& os, const Variable& var) { return os << var.name(); }
 

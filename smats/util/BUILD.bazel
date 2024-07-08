@@ -58,10 +58,7 @@ smats_cc_library(
 smats_cc_library(
     name = "hash",
     hdrs = ["hash.hpp"],
-    deps = [
-        ":concepts",
-        ":exception",
-    ],
+    deps = [":concepts"],
 )
 
 smats_cc_library(

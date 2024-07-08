@@ -9,8 +9,6 @@ using smats::Environment;
 using smats::Variable;
 using smats::Variables;
 
-#define TEnvironment Environment<TypeParam>
-
 template <class T>
 class TestEnvironment : public ::testing::Test {
  protected:

@@ -48,7 +48,7 @@ doxygen(
     ],
     html_extra_stylesheet = [
         "docs/_static/doxygen-awesome.css",
-        "docs/_static/mermaid",
+        "docs/_static/mermaid.css",
     ],
     html_footer = "docs/_static/footer.html",
     html_header = "docs/_static/header.html",

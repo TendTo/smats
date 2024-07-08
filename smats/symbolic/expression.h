@@ -25,6 +25,7 @@
 #include "smats/symbolic/environment.h"
 #include "smats/symbolic/expression_kind.h"
 #include "smats/symbolic/variable.h"
+#include "smats/symbolic/variables.h"
 #include "smats/util/definitions.h"
 #include "smats/util/hash.hpp"
 
@@ -88,15 +89,8 @@ template <class T>
 class ExpressionUninterpretedFunction;  // In expression_cell.h
 template <class T>
 class Formula;  // In formula.h
-
-template <class T, class N>
-concept IsExpressionKind =
-    IsAnyOf<T, ExpressionVar<N>, UnaryExpressionCell<N>, BinaryExpressionCell<N>, ExpressionAdd<N>, ExpressionMul<N>,
-            ExpressionDiv<N>, ExpressionLog<N>, ExpressionAbs<N>, ExpressionExp<N>, ExpressionSqrt<N>, ExpressionPow<N>,
-            ExpressionSin<N>, ExpressionCos<N>, ExpressionTan<N>, ExpressionAsin<N>, ExpressionAcos<N>,
-            ExpressionAtan<N>, ExpressionAtan2<N>, ExpressionSinh<N>, ExpressionCosh<N>, ExpressionTanh<N>,
-            ExpressionMin<N>, ExpressionMax<N>, ExpressionCeiling<N>, ExpressionFloor<N>, ExpressionIfThenElse<N>,
-            ExpressionUninterpretedFunction<N>>;
+template <class T>
+class ExpressionAddFactory;  // In expression_factory.h
 
 /**
 * Represents a symbolic form of an expression.
@@ -188,15 +182,30 @@ symbolic::Expression can be used as a scalar type of Eigen types.
 */
 template <class T>
 class Expression {
+  friend class ExpressionCell<T>;
+  friend class ExpressionAddFactory<T>;
+
  public:
+  static Expression<T> zero();
+  static Expression<T> one();
+  static Expression<T> pi() {
+    static Expression pi{static_cast<T>(std::numbers::pi)};
+    return pi;
+  }
+  static Expression<T> e() {
+    static Expression e{static_cast<T>(std::numbers::e)};
+    return e;
+  }
+  static Expression<T> NaN();
+
   /** @constructor{expression, Default to zero} */
-  Expression() = default;
-  Expression(const T& constant);
+  Expression();
+  Expression(const T& constant);  // NOLINT (runtime/explicit): This conversion is desirable.
   /**
    * Constructs an expression from @p var.
    * @pre @p var is not a BOOLEAN variable.
    */
-  Expression(const Variable& var);  // NOLINT(runtime/explicit): This conversion is desirable.
+  Expression(const Variable& var);  // NOLINT (runtime/explicit): This conversion is desirable.
 
   /** @getter{kind, expression} */
   [[nodiscard]] ExpressionKind kind() const;
@@ -211,10 +220,10 @@ class Expression {
    * internal AST(abstract-syntax tree) representation. Please note that we can
    * have two computationally (or extensionally) equivalent expressions which
    * are not structurally equal. For example, consider:
-   *
-   *    e1 = 2 * (x + y)
+   * @f[
+   *    e1 = 2 * (x + y) \\
    *    e2 = 2x + 2y
-   *
+   * @f]
    * Obviously, we know that e1 and e2 are evaluated to the same value for all
    * assignments to x and y. However, e1 and e2 are not structurally equal by
    * the definition. Note that e1 is a multiplication expression
@@ -229,8 +238,9 @@ class Expression {
    * Note that for polynomial cases, you can use Expand method and check if two
    * polynomial expressions p1 and p2 are computationally equal. To do so, you
    * check the following:
-   *
+   * @code
    *     p1.Expand().EqualTo(p2.Expand())
+   * @endcode
    */
   [[nodiscard]] bool equal_to(const Expression<T>& e) const;
 
@@ -247,7 +257,7 @@ class Expression {
    * @throws std::exception if an unassigned random variable is detected while @p random_generator is `nullptr`
    * @throws std::exception if NaN is detected during evaluation.
    */
-  T evaluate(const Environment<T>& env = {}) const;
+  [[nodiscard]] T evaluate(const Environment<T>& env = {}) const;
 
   /**
    * Partially evaluates this expression using an environment @p env.
@@ -304,46 +314,33 @@ class Expression {
    * Differentiates this symbolic expression with respect to the variable @p var.
    * @throws std::exception if it is not differentiable.
    */
-  [[nodiscard]] Expression<T> Differentiate(const Variable& x) const;
+  [[nodiscard]] Expression<T> differentiate(const Variable& x) const;
 
   /** @getter{string representation, expression}. */
   [[nodiscard]] std::string to_string() const;
 
-  static Expression Zero() {
-    static Expression zero{static_cast<T>(0)};
-    return zero;
-  }
-  static Expression One() {
-    static Expression one{static_cast<T>(1)};
-    return one;
-  }
-  static Expression Pi() {
-    static Expression pi{static_cast<T>(std::numbers::pi)};
-    return pi;
-  }
-  static Expression E() {
-    static Expression e{static_cast<T>(std::numbers::e)};
-    return e;
-  }
-  static Expression NaN();
-
   /** @hash{expression} */
-  void hash(InvocableHashAlgorithm auto& hasher) const noexcept;
+  void hash(InvocableHashAlgorithm auto& hasher) const noexcept { cell_->hash(hasher); }
 
   ARITHMETIC_OPERATORS(Expression<T>)
+  Expression<T> operator-() const;
   Expression<T>& operator++();
   Expression<T> operator++(int);
   Expression<T>& operator--();
   Expression<T> operator--(int);
 
-  template <class N>
-  bool is() const;
-
   // Cast functions which takes a pointer to a non-const Expression.
   bool is_constant() const;
+  bool is_constant(const T& value) const;
   bool is_variable() const;
+  bool is_variable(const Variable& var) const;
   bool is_addition() const;
   bool is_multiplication() const;
+
+  const T& constant_value() const;
+
+  // TODO(ernesto): remove
+  std::shared_ptr<const ExpressionCell<T>>& get() { return cell_; }
 
  private:
   explicit Expression(const std::shared_ptr<const ExpressionCell<T>>& cell);

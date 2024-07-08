@@ -7,6 +7,8 @@
  * Including this file will allow you to use the smats types with fmt::print and fmt::format.
  * If the feature is not enabled, avoiding to include this file will remove the dependency on fmt.
  */
+#pragma once
+
 #include <fmt/ostream.h>
 
 #include "smats/symbolic/symbolic.h"
