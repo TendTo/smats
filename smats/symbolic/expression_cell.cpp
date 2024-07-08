@@ -5,6 +5,8 @@
  */
 #include "smats/symbolic/expression_cell.h"
 
+#include <numeric>
+
 #include "smats/util/exception.h"
 
 namespace smats {
