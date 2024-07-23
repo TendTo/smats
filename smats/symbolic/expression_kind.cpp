@@ -9,7 +9,7 @@
 #include <map>
 #include <string>
 
-#include "smats/util/exception.h"
+#include "smats/util/error.h"
 
 namespace smats {
 

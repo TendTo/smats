@@ -7,9 +7,9 @@ smats_cc_googletest(
 )
 
 smats_cc_googletest(
-    name = "test_exception",
+    name = "test_error",
     tags = ["util"],
-    deps = ["//smats/util:exception"],
+    deps = ["//smats/util:error"],
 )
 
 smats_cc_googletest(

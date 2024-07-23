@@ -15,6 +15,10 @@ namespace smats {
 
 /**
  * Check if the type T is an enum
+ * @code
+ * template <IsEnum T>
+ * void foo(T t); // T can be any enum type
+ * @endcode
  * @tparam T type to check
  */
 template <class T>
@@ -22,6 +26,10 @@ concept IsEnum = std::is_enum_v<T>;
 
 /**
  * Check if the type T is any of the types U
+ * @code
+ * template <IsAnyOf<int, float, bool> T>
+ * void foo(T t); // T can be either int, float or bool
+ * @endcode
  * @tparam T type to check
  * @tparam U any number of types to check against
  */
@@ -30,6 +38,10 @@ concept IsAnyOf = (std::same_as<T, U> || ...);
 
 /**
  * Check if the type T is not any of the types U
+ * @code
+ * template <IsNotAnyOf<int, float, bool> T>
+ * void foo(T t); // T can be any type except int, float or bool
+ * @endcode
  * @tparam T type to check
  * @tparam U any number of types to check against
  */
@@ -38,6 +50,10 @@ concept IsNotAnyOf = !IsAnyOf<T, U...>;
 
 /**
  * Check if the type T supports the arithmetic operations +, -, *, /
+ * @code
+ * template <Arithmetic T>
+ * void foo(T a, T b); // a and b can be added, subtracted, multiplied and divided with the corresponding operator
+ * @endcode
  * @tparam T type to check
  */
 template <class T>
@@ -50,6 +66,10 @@ concept Arithmetic = requires(T a, T b) {
 
 /**
  * Check if the type T supports the arithmetic operations +, -, *, / and the comparison operators <, >, <=, >=
+ * @code
+ * template <Numeric T>
+ * void foo(T a); // a can be added, subtracted, multiplied, divided and ordered with the corresponding operator
+ * @endcode
  * @tparam T type to check
  */
 template <class T>

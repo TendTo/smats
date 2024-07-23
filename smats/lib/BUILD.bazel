@@ -11,7 +11,7 @@ smats_cc_library(
     name = "gmp",
     srcs = ["gmp.cpp"],
     hdrs = ["gmp.h"],
-    implementation_deps = ["//smats/util:exception"],
+    implementation_deps = ["//smats/util:error"],
     deps = [
         "//smats/util:logging",
         "@gmp",

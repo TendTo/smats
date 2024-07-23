@@ -8,7 +8,7 @@
 
 #include <atomic>
 
-#include "smats/util/exception.h"
+#include "smats/util/error.h"
 
 namespace smats {
 

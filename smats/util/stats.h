@@ -17,16 +17,24 @@
 
 namespace smats {
 
+/**
+ * Measure the statistics of the software.
+ *
+ * Namely, measure the time spent in operations.
+ */
 class Stats {
- private:
-  Timer timer_;
-
- protected:
-  bool enabled_;
-  std::string class_name_;
-  std::string operations_name_;
-
  public:
+  /**
+   * Construct a new Stats object.
+   *
+   * The @p enabled flag is used to enable or disable the stats measuring.
+   * The @p class_name is the name of the class the stats are measuring,
+   * while the @p name_time is the prompt to specify what operation the time has been measured of.
+   * They are shown in the output of the to_string() method.
+   * @param enabled whether the stats measuring is enabled
+   * @param class_name name of the class the stats are measuring
+   * @param name_time prompt to specify what operation the time has been measured of
+   */
   explicit Stats(bool enabled, std::string class_name, std::string name_time = "Time spent in Operations");
   Stats(const Stats &other) = default;
   Stats &operator=(const Stats &other) = default;
@@ -52,14 +60,35 @@ class Stats {
    * @return string representing the state of the Stats
    */
   [[nodiscard]] virtual std::string to_string() const;
+
+ protected:
+  bool enabled_;                 ///< Whether the stats measuring is enabled
+  std::string class_name_;       ///< Name of the class the stats are measuring
+  std::string operations_name_;  ///< Prompt to specify what operation the time has been measured of
+
+ private:
+  Timer timer_;  ///< Timer to measure the time spent in operations
 };
 
+/**
+ * Measure the statistics of the software.
+ *
+ * Namely, measure the time spent in operations and the number of iterations.
+ */
 class IterationStats : public Stats {
- private:
-  std::atomic<unsigned int> iterations_;
-  std::string iterations_name_;
-
  public:
+  /**
+   * Construct a new IterationStats object.
+   *
+   * The @p enabled flag is used to enable or disable the stats measuring.
+   * The @p class_name is the name of the class the stats are measuring,
+   * while the @p name_time is the prompt to specify what operation the time has been measured of,
+   * and the @p iterations_name is the prompt to specify the number of iterations.
+   * @param enabled whether the stats measuring is enabled
+   * @param class_name name of the class the stats are measuring
+   * @param name_time prompt to specify what operation the time has been measured of
+   * @param iterations_name prompt to specify the number of iterations
+   */
   explicit IterationStats(bool enabled, std::string class_name, std::string name_time = "Time spent in Operations",
                           std::string iterations_name = "Total # of Iterations");
   IterationStats(const IterationStats &other);
@@ -82,6 +111,10 @@ class IterationStats : public Stats {
 
   void operator++();
   void operator++(int);
+
+ private:
+  std::atomic<unsigned int> iterations_;  ///< Number of iterations
+  std::string iterations_name_;           ///< Prompt to specify the number of iterations
 };
 
 std::ostream &operator<<(std::ostream &os, const Stats &stats);

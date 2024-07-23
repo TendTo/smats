@@ -9,7 +9,7 @@
 #include <sstream>
 
 #include "smats/symbolic/expression_cell.h"
-#include "smats/util/exception.h"
+#include "smats/util/error.h"
 
 namespace smats {
 

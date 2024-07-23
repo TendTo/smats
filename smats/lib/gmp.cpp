@@ -9,7 +9,7 @@
 #include <cmath>
 #include <string>
 
-#include "smats/util/exception.h"
+#include "smats/util/error.h"
 
 namespace std {
 

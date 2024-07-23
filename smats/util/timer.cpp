@@ -12,7 +12,7 @@
 #include <windows.h>
 #endif
 
-#include "smats/util/exception.h"
+#include "smats/util/error.h"
 #include "smats/util/logging.h"
 
 namespace smats {
@@ -59,6 +59,19 @@ template <class T>
 std::chrono::duration<double>::rep TimerBase<T>::seconds() const {
   SMATS_TRACE("TimerBase::seconds");
   return std::chrono::duration_cast<std::chrono::duration<double>>(elapsed()).count();
+}
+
+template <typename T>
+TimerBase<T> &TimerBase<T>::operator+=(const TimerBase<T> &other) {
+  elapsed_ += other.elapsed();
+  return *this;
+}
+
+template <typename T>
+TimerBase<T> TimerBase<T>::operator+(const TimerBase<T> &other) const {
+  TimerBase<T> result = *this;
+  result += other;
+  return result;
 }
 
 user_clock::time_point user_clock::now() {

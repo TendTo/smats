@@ -2,7 +2,7 @@
  * @author Ernesto Casablanca (casablancaernesto@gmail.com)
  * @copyright 2024 smats
  * @licence Apache-2.0 license
- * Utilities to measure the performance of the software.
+ * Timer classes.
  *
  * The Timer class is a simple timer class to evaluate the performance of the software.
  * The TimerGuard class wraps a timer object and pauses it when the guard object is destructed.
@@ -19,8 +19,6 @@ namespace smats {
 struct user_clock;
 
 /**
- * Timer class.
- *
  * Simple timer class to evaluate the performance of the software.
  */
 template <typename T>
@@ -30,6 +28,7 @@ class TimerBase {
   typedef typename clock::duration duration;
   typedef typename clock::time_point time_point;
 
+  /** @constructor{timer base} */
   TimerBase();
 
   /**
@@ -73,19 +72,6 @@ class TimerBase {
   duration elapsed_{};       ///< Elapsed time so far. This doesn't include the current fragment if it is running.
 };
 
-template <typename T>
-TimerBase<T> &TimerBase<T>::operator+=(const TimerBase<T> &other) {
-  elapsed_ += other.elapsed();
-  return *this;
-}
-
-template <typename T>
-TimerBase<T> TimerBase<T>::operator+(const TimerBase<T> &other) const {
-  TimerBase<T> result = *this;
-  result += other;
-  return result;
-}
-
 // Use high_resolution clock if it's steady, otherwise use steady_clock.
 using chosen_steady_clock = std::conditional<std::chrono::high_resolution_clock::is_steady,
                                              std::chrono::high_resolution_clock, std::chrono::steady_clock>::type;
@@ -106,14 +92,12 @@ extern template class TimerBase<user_clock>;
 class UserTimer : public TimerBase<user_clock> {};
 
 /**
- * TimerGuard class.
- *
- * Wraps a timer object and pauses it when the guard object is destructed.
+ * Wrap a timer object and pauses it when the guard object is destructed.
  */
 class TimerGuard {
  public:
   /**
-   * TimerGuard constructor.
+   * Construct a timer guard object.
    *
    * If @p enabled is false or @p timer is a nullptr, this class does not do anything.
    * If @p start_timer is true, starts the @p timer in the constructor.

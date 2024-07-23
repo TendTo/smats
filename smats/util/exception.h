@@ -2,79 +2,63 @@
  * @author Ernesto Casablanca (casablancaernesto@gmail.com)
  * @copyright 2024 smats
  * @licence Apache-2.0 license
- * Utilities that verify assumptions made by the program and aborts
- * the program if those assumptions are not true.
+ * Custom exception classes.
  *
- * If NDEBUG is defined, most of the macro do nothing and give no explanation.
- * It makes the program faster, but it becomes less useful for debugging.
+ * This file contains the definition of the custom exception classes.
+ * They inherit from std::exception and override the what() method,
+ * returning a custom message to aid in debugging.
  */
 #pragma once
 
-#include <stdexcept>
+#include <exception>
 
-#ifdef NDEBUG
+namespace smats {
 
-#define SMATS_ASSERT(condition, msg) ((void)0)
-#define SMATS_ASSERT_FMT(condition, msg, ...) ((void)0)
-#define SMATS_UNREACHABLE() std::terminate()
-#define SMATS_RUNTIME_ERROR(msg) throw std::runtime_error(msg)
-#define SMATS_RUNTIME_ERROR_FMT(msg, ...) throw std::runtime_error(msg)
-#define SMATS_OUT_OF_RANGE_FMT(msg, ...) throw std::out_of_range(msg)
-#define SMATS_INVALID_ARGUMENT(argument, actual) throw std::runtime_error(argument)
-#define SMATS_INVALID_ARGUMENT_EXPECTED(argument, actual, expected) throw std::runtime_error(argument)
+class SmatsException : public std::exception {
+ public:
+  SmatsException() = default;
+  SmatsException(const char* const message) : std::exception(message) {}
+  SmatsException(const std::string& message) : std::exception(message.c_str()) {}
+};
 
-#else
+class SmatsNotImplementedException : public SmatsException {
+ public:
+  const char* what() const noexcept override { return "Not implemented"; }
+};
 
-#include <fmt/core.h>
+class SmatsNotSupported : public SmatsException {
+ public:
+  const char* what() const noexcept override { return "Not supported"; }
+};
 
-#include "smats/util/logging.h"
+class SmatsInvalidArgument : public SmatsException {
+ public:
+  const char* what() const noexcept override { return "Invalid argument"; }
+};
 
-#define SMATS_ASSERT(condition, message)                                                                 \
-  do {                                                                                                   \
-    if (!(condition)) {                                                                                  \
-      SMATS_CRITICAL_FMT("Assertion `{}` failed in {}:{}: {}", #condition, __FILE__, __LINE__, message); \
-      std::terminate();                                                                                  \
-    }                                                                                                    \
-  } while (false)
+class SmatsInvalidCommandLineArgument : public SmatsException {};
 
-#define SMATS_ASSERT_FMT(condition, message, ...)                                           \
-  do {                                                                                      \
-    if (!(condition)) {                                                                     \
-      SMATS_CRITICAL_FMT("Assertion `{}` failed in {}:{}", #condition, __FILE__, __LINE__); \
-      SMATS_CRITICAL_FMT(message, __VA_ARGS__);                                             \
-      std::terminate();                                                                     \
-    }                                                                                       \
-  } while (false)
+class SmatsInvalidState : public SmatsException {
+ public:
+  const char* what() const noexcept override { return "Invalid state"; }
+};
 
-#define SMATS_UNREACHABLE()                                                   \
-  do {                                                                        \
-    SMATS_CRITICAL_FMT("{}:{} Should not be reachable.", __FILE__, __LINE__); \
-    std::terminate();                                                         \
-  } while (false)
+class SmatsAssertionError : public SmatsException {
+ public:
+  SmatsAssertionError(const char* const message) : SmatsException(message) {}
+  SmatsAssertionError(const std::string& message) : SmatsException(message.c_str()) {}
+};
 
-#define SMATS_RUNTIME_ERROR(msg)   \
-  do {                             \
-    SMATS_CRITICAL(msg);           \
-    throw std::runtime_error(msg); \
-  } while (false)
+class SmatsOutOfRange : public SmatsException {
+ public:
+  SmatsOutOfRange(const char* const message) : SmatsException(message) {}
+  SmatsOutOfRange(const std::string& message) : SmatsException(message.c_str()) {}
+};
 
-#define SMATS_RUNTIME_ERROR_FMT(msg, ...)                    \
-  do {                                                       \
-    SMATS_CRITICAL_FMT(msg, __VA_ARGS__);                    \
-    throw std::runtime_error(fmt::format(msg, __VA_ARGS__)); \
-  } while (false)
+class SmatsUnreachable : public SmatsException {
+ public:
+  SmatsUnreachable(const char* const message) : SmatsException(message) {}
+  SmatsUnreachable(const std::string& message) : SmatsException(message.c_str()) {}
+};
 
-#define SMATS_OUT_OF_RANGE_FMT(msg, ...)                    \
-  do {                                                      \
-    SMATS_CRITICAL_FMT(msg, __VA_ARGS__);                   \
-    throw std::out_of_range(fmt::format(msg, __VA_ARGS__)); \
-  } while (false)
-
-#define SMATS_INVALID_ARGUMENT(argument, actual) \
-  throw std::invalid_argument(fmt::format("Invalid argument for {}: {}", argument, actual))
-
-#define SMATS_INVALID_ARGUMENT_EXPECTED(argument, actual, expected) \
-  throw std::invalid_argument(                                      \
-      fmt::format("Invalid argument for {}: received '{}', expected '{}'", argument, actual, expected))
-
-#endif  // NDEBUG
+}  // namespace smats

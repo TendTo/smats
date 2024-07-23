@@ -12,7 +12,7 @@ smats_cc_library(
     name = "variable",
     srcs = ["variable.cpp"],
     hdrs = ["variable.h"],
-    implementation_deps = ["//smats/util:exception"],
+    implementation_deps = ["//smats/util:error"],
     deps = [
         "//smats/util:concepts",
         "//smats/util:hash",
@@ -34,7 +34,7 @@ smats_cc_library(
     name = "environment",
     srcs = ["environment.cpp"],
     hdrs = ["environment.h"],
-    implementation_deps = ["//smats/util:exception"],
+    implementation_deps = ["//smats/util:error"],
     deps = [
         ":variable",
         ":variables",
@@ -45,7 +45,7 @@ smats_cc_library(
     name = "expression_kind",
     srcs = ["expression_kind.cpp"],
     hdrs = ["expression_kind.h"],
-    implementation_deps = ["//smats/util:exception"],
+    implementation_deps = ["//smats/util:error"],
 )
 
 smats_cc_library(
@@ -58,9 +58,7 @@ smats_cc_library(
         "expression_factory.h",
     ],
     hdrs = ["expression.h"],
-    implementation_deps = [
-        "//smats/util:exception",
-    ],
+    implementation_deps = ["//smats/util:error"],
     tags = ["no-iwyu"],
     deps = [
         ":environment",
