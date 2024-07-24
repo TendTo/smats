@@ -105,10 +105,9 @@ E := Var | Constant | E + ... + E | E * ... * E | E / E | log(E)
    | NaN | uninterpreted_function(name, {v_1, ..., v_n})
 @endverbatim
 
-In the implementation, Expression directly stores Constant values inline, but in
-all other cases stores a shared pointer to a const ExpressionCell class that is
-a super-class of different kinds of symbolic expressions (i.e., ExpressionAdd,
-ExpressionMul, ExpressionLog, ExpressionSin), which makes it efficient to copy,
+In the implementation, Expression directly stores a shared pointer to a const ExpressionCell class
+that is a super-class of different kinds of symbolic expressions
+(i.e., ExpressionAdd, ExpressionMul, ExpressionLog, ExpressionSin), which makes it efficient to copy,
 move, and assign to an Expression.
 
 @note -E is represented as -1 * E internally.
@@ -330,29 +329,29 @@ class Expression {
   Expression<T> operator--(int);
 
   // Cast functions which takes a pointer to a non-const Expression.
-  bool is_constant() const;
-  bool is_constant(const T& value) const;
-  bool is_variable() const;
-  bool is_variable(const Variable& var) const;
-  bool is_addition() const;
-  bool is_multiplication() const;
+  [[nodiscard]] bool is_constant() const;
+  [[nodiscard]] bool is_constant(const T& value) const;
+  [[nodiscard]] bool is_variable() const;
+  [[nodiscard]] bool is_variable(const Variable& var) const;
+  [[nodiscard]] bool is_addition() const;
+  [[nodiscard]] bool is_multiplication() const;
 
-  const T& constant_value() const;
+  [[nodiscard]] const T& constant_value() const;
 
-  // TODO(ernesto): remove
-  std::shared_ptr<const ExpressionCell<T>>& get() { return cell_; }
+  /** @getter{reference count, underlying expression cell} */
+  [[nodiscard]] long use_count() const { return cell_.use_count(); }
 
  private:
   explicit Expression(const std::shared_ptr<const ExpressionCell<T>>& cell);
 
-  // Returns a const reference to the owned cell.
-  // @pre This expression is not a Constant.
-  const ExpressionCell<T>& cell() const { return *cell_; }
-
-  // Returns a mutable reference to the owned cell. This function may only be
-  // called when this object is the sole owner of the cell (use_count == 1).
-  // @pre This expression is not an ExpressionKind::Constant.
-  ExpressionCell<T>& m_cell();
+  /** @getter{underlying expression cell, expression} */
+  [[nodiscard]] const ExpressionCell<T>& cell() const { return *cell_; }
+  /**
+   * @getsetter{underlying expression cell, expression,
+   * This function may only be called when this object is the sole owner of the cell (use_count == 1)
+   * @pre This expression is the sole owner of the cell (use_count == 1)}
+   */
+  [[nodiscard]] ExpressionCell<T>& m_cell();
 
   std::shared_ptr<const ExpressionCell<T>> cell_;
 };
