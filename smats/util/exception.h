@@ -10,15 +10,16 @@
  */
 #pragma once
 
-#include <exception>
+#include <stdexcept>
+#include <string>
 
 namespace smats {
 
-class SmatsException : public std::exception {
+class SmatsException : public std::runtime_error {
  public:
   SmatsException() = default;
-  SmatsException(const char* const message) : std::exception(message) {}
-  SmatsException(const std::string& message) : std::exception(message.c_str()) {}
+  explicit SmatsException(const char* const message) : std::runtime_error(message) {}
+  explicit SmatsException(const std::string& message) : std::runtime_error(message) {}
 };
 
 class SmatsNotImplementedException : public SmatsException {
@@ -45,20 +46,20 @@ class SmatsInvalidState : public SmatsException {
 
 class SmatsAssertionError : public SmatsException {
  public:
-  SmatsAssertionError(const char* const message) : SmatsException(message) {}
-  SmatsAssertionError(const std::string& message) : SmatsException(message.c_str()) {}
+  explicit SmatsAssertionError(const char* const message) : SmatsException(message) {}
+  explicit SmatsAssertionError(const std::string& message) : SmatsException(message) {}
 };
 
 class SmatsOutOfRange : public SmatsException {
  public:
-  SmatsOutOfRange(const char* const message) : SmatsException(message) {}
-  SmatsOutOfRange(const std::string& message) : SmatsException(message.c_str()) {}
+  explicit SmatsOutOfRange(const char* const message) : SmatsException(message) {}
+  explicit SmatsOutOfRange(const std::string& message) : SmatsException(message) {}
 };
 
 class SmatsUnreachable : public SmatsException {
  public:
-  SmatsUnreachable(const char* const message) : SmatsException(message) {}
-  SmatsUnreachable(const std::string& message) : SmatsException(message.c_str()) {}
+  explicit SmatsUnreachable(const char* const message) : SmatsException(message) {}
+  explicit SmatsUnreachable(const std::string& message) : SmatsException(message) {}
 };
 
 }  // namespace smats

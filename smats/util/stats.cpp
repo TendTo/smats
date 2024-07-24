@@ -16,7 +16,7 @@
 namespace smats {
 
 Stats::Stats(const bool enabled, std::string class_name, std::string operations_name)
-    : timer_{}, enabled_{enabled}, class_name_{std::move(class_name)}, operations_name_{std::move(operations_name)} {}
+    : enabled_{enabled}, class_name_{std::move(class_name)}, operations_name_{std::move(operations_name)}, timer_{} {}
 
 std::string Stats::to_segment_string() const {
   return fmt::format(SMATS_STATS_FMT, operations_name_, class_name_, timer_.seconds());

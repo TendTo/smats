@@ -32,6 +32,8 @@ smats_cc_binary(
     srcs = ["main.cpp"],
     deps = [
         ":version",
+        "//smats/symbolic",
+        "//smats/util:fmt_ostream",
         "@fmt",
     ],
 )

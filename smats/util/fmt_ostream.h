@@ -24,3 +24,7 @@ OSTREAM_FORMATTER(smats::EnvironmentD);
 OSTREAM_FORMATTER(smats::EnvironmentF);
 OSTREAM_FORMATTER(smats::EnvironmentI);
 OSTREAM_FORMATTER(smats::EnvironmentL);
+OSTREAM_FORMATTER(smats::ExpressionD);
+OSTREAM_FORMATTER(smats::ExpressionF);
+OSTREAM_FORMATTER(smats::ExpressionI);
+OSTREAM_FORMATTER(smats::ExpressionL);

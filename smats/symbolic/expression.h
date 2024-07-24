@@ -362,6 +362,11 @@ std::ostream& operator<<(std::ostream& os, const Expression<T>& e);
 
 EXTERNAL_TEMPLATE_INSTANTIATION_NUMERIC(Expression);
 
+using ExpressionD = Expression<double>;
+using ExpressionF = Expression<float>;
+using ExpressionI = Expression<int>;
+using ExpressionL = Expression<long>;
+
 }  // namespace smats
 
 namespace std {
