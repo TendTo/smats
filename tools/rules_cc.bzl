@@ -321,14 +321,17 @@ def smats_srcs(name, srcs = None, hdrs = None, deps = [], visibility = ["//visib
         name = srcs_name,
         srcs = srcs + hdrs,
         visibility = visibility,
+        tags = ["no-cpplint"],
     )
     native.filegroup(
         name = hdrs_name,
         srcs = hdrs,
         visibility = visibility,
+        tags = ["no-cpplint"],
     )
     native.filegroup(
         name = all_srcs_name,
         srcs = srcs + hdrs + deps,
         visibility = visibility,
+        tags = ["no-cpplint"],
     )
