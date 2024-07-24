@@ -17,7 +17,6 @@ namespace smats {
 
 class SmatsException : public std::runtime_error {
  public:
-  SmatsException() = default;
   explicit SmatsException(const char* const message) : std::runtime_error(message) {}
   explicit SmatsException(const std::string& message) : std::runtime_error(message) {}
 };
