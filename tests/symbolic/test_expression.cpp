@@ -25,12 +25,32 @@ class TestExpression : public ::testing::Test {
 using TestParams = ::testing::Types<int, long, float, double>;
 TYPED_TEST_SUITE(TestExpression, TestParams);
 
+TYPED_TEST(TestExpression, ConstantZeroConstructor) {
+  Expression<TypeParam> e{0};
+  EXPECT_TRUE(e.is_constant());
+  EXPECT_FALSE(e.is_variable());
+  EXPECT_TRUE(e.is_constant(0));
+  EXPECT_FALSE(e.is_constant(1));
+  EXPECT_EQ(e.use_count(), 2);
+}
+
+TYPED_TEST(TestExpression, ConstantOneConstructor) {
+  Expression<TypeParam> e{1};
+  EXPECT_TRUE(e.is_constant());
+  EXPECT_FALSE(e.is_variable());
+  EXPECT_FALSE(e.is_constant(0));
+  EXPECT_TRUE(e.is_constant(1));
+  EXPECT_EQ(e.use_count(), 2);
+}
+
 TYPED_TEST(TestExpression, ConstantConstructor) {
-  Expression<TypeParam> zero{0};
-  EXPECT_TRUE(zero.is_constant());
-  EXPECT_FALSE(zero.is_variable());
-  EXPECT_TRUE(zero.is_constant(0));
-  EXPECT_FALSE(zero.is_constant(1));
+  Expression<TypeParam> e{17};
+  EXPECT_TRUE(e.is_constant());
+  EXPECT_FALSE(e.is_variable());
+  EXPECT_FALSE(e.is_constant(0));
+  EXPECT_FALSE(e.is_constant(1));
+  EXPECT_TRUE(e.is_constant(17));
+  EXPECT_EQ(e.use_count(), 1);
 }
 
 TYPED_TEST(TestExpression, VariableConstructor) {

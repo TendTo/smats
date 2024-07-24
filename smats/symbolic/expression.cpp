@@ -134,6 +134,7 @@ Expression<T> Expression<T>::NaN() {
 
 template <class T>
 ExpressionCell<T>& Expression<T>::m_cell() {
+  SMATS_ASSERT(cell_.use_count() == 1, "Expression is not the only owner of the cell");
   return const_cast<ExpressionCell<T>&>(*cell_);
 }
 

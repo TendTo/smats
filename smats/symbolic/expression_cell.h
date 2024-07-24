@@ -67,6 +67,9 @@ class ExpressionCell : public std::enable_shared_from_this<ExpressionCell<T>> {
     return std::enable_shared_from_this<ExpressionCell<T>>::shared_from_this();
   }
 
+  /** @getter{reference count, expression cell} */
+  long use_count() const { return std::enable_shared_from_this<ExpressionCell<T>>::shared_from_this().use_count(); }
+
   /** @getter{kind, expression cell} */
   [[nodiscard]] ExpressionKind kind() const { return kind_; }
 

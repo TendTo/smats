@@ -24,21 +24,24 @@ class ExpressionAddFactory {
   explicit ExpressionAddFactory(const std::shared_ptr<const ExpressionCell<T>> &e);
   explicit ExpressionAddFactory(const ExpressionCell<T> &e);
 
+  ExpressionAddFactory<T> &operator+=(const ExpressionAddFactory<T> &o);
   ExpressionAddFactory<T> &operator+=(const T &o);
   ExpressionAddFactory<T> &operator+=(const Expression<T> &o);
   ExpressionAddFactory<T> &operator+=(const std::shared_ptr<ExpressionCell<T>> &o);
   ExpressionAddFactory<T> &operator+=(const ExpressionCell<T> &o);
 
+  ExpressionAddFactory<T> &add(const ExpressionAddFactory<T> &o);
   ExpressionAddFactory<T> &add(const T &o);
   ExpressionAddFactory<T> &add(const Expression<T> &o);
   ExpressionAddFactory<T> &add(const std::shared_ptr<ExpressionCell<T>> &o);
   ExpressionAddFactory<T> &add(const ExpressionCell<T> &o);
+
   ExpressionAddFactory<T> &add(const T &constant, const ExpressionMap &expr_to_coeff_map);
-  ExpressionAddFactory<T> &add(const T &constant, const Expression<T> &expr);
+  ExpressionAddFactory<T> &add(const T &coeff, const Expression<T> &expr);
 
   ExpressionAddFactory<T> &negate();
 
-  [[nodiscard]] std::shared_ptr<const ExpressionCell<T>> build() const;
+  [[nodiscard]] Expression<T> build() const;
 
  private:
   T constant_{0};
@@ -69,7 +72,7 @@ class ExpressionMulFactory {
 
   ExpressionMulFactory<T> &negate();
 
-  [[nodiscard]] std::shared_ptr<const ExpressionCell<T>> build() const;
+  [[nodiscard]] Expression<T> build() const;
 
  private:
   T constant_{1.0};

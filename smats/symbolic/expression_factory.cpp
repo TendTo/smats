@@ -25,17 +25,20 @@ ExpressionAddFactory<T>::ExpressionAddFactory(const std::shared_ptr<const Expres
     : ExpressionAddFactory(*e) {}
 template <class T>
 ExpressionAddFactory<T>::ExpressionAddFactory(const ExpressionCell<T> &e) : constant_{}, expr_to_coeff_map_{} {
-  SMATS_ASSERT(
-      e.kind() == ExpressionKind::Add || e.kind() == ExpressionKind::Constant || e.kind() == ExpressionKind::Var,
-      "ExpressionAddFactory::ExpressionAddFactory: invalid kind");
   if (e.kind() == ExpressionKind::Constant) {
     constant_ = e.template to<ExpressionConstant>().value();
-  } else if (e.kind() == ExpressionKind::Var) {
-    expr_to_coeff_map_[Expression<T>{e.shared_from_this()}] = 1;
-  } else {
+  } else if (e.kind() == ExpressionKind::Add) {
     constant_ = e.template to<ExpressionAdd>().constant();
     expr_to_coeff_map_ = e.template to<ExpressionAdd>().expr_to_coeff_map();
+  } else {
+    expr_to_coeff_map_[Expression<T>{e.ptr()}] = 1;
   }
+}
+template <class T>
+ExpressionAddFactory<T> &ExpressionAddFactory<T>::operator+=(const ExpressionAddFactory<T> &o) {
+  constant_ += o.constant_;
+  for (const auto &[e, c] : o.expr_to_coeff_map_) expr_to_coeff_map_[e] += c;
+  return *this;
 }
 template <class T>
 ExpressionAddFactory<T> &ExpressionAddFactory<T>::operator+=(const T &o) {
@@ -44,27 +47,8 @@ ExpressionAddFactory<T> &ExpressionAddFactory<T>::operator+=(const T &o) {
 }
 template <class T>
 ExpressionAddFactory<T> &ExpressionAddFactory<T>::operator+=(const Expression<T> &o) {
-  if (o.is_constant()) {
-    const T &v{o.constant_value()};
-    return *this += v;
-  }
-  if (o.is_variable()) {
-    expr_to_coeff_map_[o] += 1;
-    return *this;
-  }
-  if (o.is_addition()) return *this += o.cell();
-
-  if (o.is_multiplication()) {
-    const T &constant = o.constant_value();
-    if (constant != 1.0) {
-      SMATS_UNREACHABLE();
-      // Instead of adding (1.0 * (constant * b1^t1 ... bn^tn)),
-      // add (constant, 1.0 * b1^t1 ... bn^tn).
-      //      return add(constant, ExpressionMulFactory(1.0,
-      //      get_base_to_exponent_map_in_multiplication(e)).GetExpression());
-    }
-  }
-  return add(1, o);
+  SMATS_ASSERT(o.cell() != nullptr, "ExpressionAddFactory::operator+=: nullptr");
+  return *this += *o.cell();
 }
 template <class T>
 ExpressionAddFactory<T> &ExpressionAddFactory<T>::operator+=(const std::shared_ptr<ExpressionCell<T>> &o) {
@@ -73,12 +57,35 @@ ExpressionAddFactory<T> &ExpressionAddFactory<T>::operator+=(const std::shared_p
 }
 template <class T>
 ExpressionAddFactory<T> &ExpressionAddFactory<T>::operator+=(const ExpressionCell<T> &o) {
-  SMATS_ASSERT(o.kind() == ExpressionKind::Add, "ExpressionAddFactory::operator+=: invalid kind");
-  constant_ += o.template to<ExpressionAdd>().constant();
-  for (const auto &[e, c] : o.template to<ExpressionAdd>().expr_to_coeff_map()) {
-    expr_to_coeff_map_[e] += c;
+  switch (o.kind()) {
+    case ExpressionKind::Constant:
+      constant_ += o.template to<ExpressionConstant>().value();
+      break;
+    case ExpressionKind::Add /:
+      constant_ += o.template to<ExpressionAdd>().constant();
+      for (const auto &[e, c] : o.template to<ExpressionAdd>().expr_to_coeff_map()) {
+        expr_to_coeff_map_[e] += c;
+      }
+      break;
+    case ExpressionKind::Mul:
+      const T &constant = o.constant_value();
+      if (constant != 1.0) {
+        SMATS_UNREACHABLE();
+        // Instead of adding (1.0 * (constant * b1^t1 ... bn^tn)),
+        // add (constant, 1.0 * b1^t1 ... bn^tn).
+        //      return add(constant, ExpressionMulFactory(1.0,
+        //      get_base_to_exponent_map_in_multiplication(e)).GetExpression());
+      }
+      break;
+    default:
+      expr_to_coeff_map_[Expression<T>{o.ptr()}] += 1;
+      break;
   }
   return *this;
+}
+template <classT T>
+ExpressionAddFactory<T> &ExpressionAddFactory<T>::add(const ExpressionAddFactory<T> &o) {
+  return *this += o;
 }
 template <class T>
 ExpressionAddFactory<T> &ExpressionAddFactory<T>::add(const T &o) {
@@ -115,16 +122,16 @@ ExpressionAddFactory<T> &ExpressionAddFactory<T>::negate() {
   return *this;
 }
 template <class T>
-std::shared_ptr<const ExpressionCell<T>> ExpressionAddFactory<T>::build() const {
-  if (constant_ == 0 && expr_to_coeff_map_.empty()) return Expression<T>::zero().cell().shared_from_this();
+Expression<T> ExpressionAddFactory<T>::build() const {
+  if (constant_ == 0 && expr_to_coeff_map_.empty()) return Expression<T>::zero();
   if (constant_ == 0 && expr_to_coeff_map_.size() == 1) {
     const auto &[e, c] = *expr_to_coeff_map_.begin();
     if (c == 1)
-      return e.cell().shared_from_this();
+      return e;
     else
       return std::shared_ptr<const ExpressionCell<T>>{ExpressionVar<T>::New({})};  // TODO(ernesto): implement mul
   }
-  return ExpressionAdd<T>::New(constant_, expr_to_coeff_map_);
+  return Expression<T>{ExpressionAdd<T>::New(constant_, expr_to_coeff_map_)};
 }
 
 /**
@@ -146,7 +153,7 @@ ExpressionMulFactory<T>::ExpressionMulFactory(const ExpressionCell<T> &e) : cons
   if (e.kind() == ExpressionKind::Constant) {
     constant_ = e.template to<ExpressionConstant>().value();
   } else if (e.kind() == ExpressionKind::Var) {
-    base_to_exponent_map_[Expression<T>{e.shared_from_this()}] = Expression<T>::one();
+    base_to_exponent_map_[Expression<T>{e.ptr()}] = Expression<T>::one();
   } else {
     constant_ = e.template to<ExpressionMul>().constant();
     base_to_exponent_map_ = e.template to<ExpressionMul>().base_to_exponent_map();
