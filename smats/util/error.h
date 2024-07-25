@@ -82,4 +82,6 @@
   throw ::smats::SmatsInvalidArgument(                              \
       fmt::format("Invalid argument for {}: received '{}', expected '{}'", argument, actual, expected))
 
+#define SMATS_NOT_IMPLEMENTED() throw ::smats::SmatsNotImplementedException()
+
 #endif  // NDEBUG

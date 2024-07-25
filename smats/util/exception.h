@@ -23,24 +23,24 @@ class SmatsException : public std::runtime_error {
 
 class SmatsNotImplementedException : public SmatsException {
  public:
-  const char* what() const noexcept override { return "Not implemented"; }
+  SmatsNotImplementedException() : SmatsException("Not yet implemented") {}
 };
 
 class SmatsNotSupported : public SmatsException {
  public:
-  const char* what() const noexcept override { return "Not supported"; }
+  SmatsNotSupported() : SmatsException("Not supported") {}
 };
 
 class SmatsInvalidArgument : public SmatsException {
  public:
-  const char* what() const noexcept override { return "Invalid argument"; }
+  SmatsInvalidArgument() : SmatsException("Invalid argument") {}
 };
 
 class SmatsInvalidCommandLineArgument : public SmatsException {};
 
 class SmatsInvalidState : public SmatsException {
  public:
-  const char* what() const noexcept override { return "Invalid state"; }
+  SmatsInvalidState() : SmatsException("Invalid state") {}
 };
 
 class SmatsAssertionError : public SmatsException {
