@@ -68,7 +68,9 @@ class ExpressionCell : public std::enable_shared_from_this<ExpressionCell<T>> {
   }
 
   /** @getter{reference count, expression cell} */
-  long use_count() const { return std::enable_shared_from_this<ExpressionCell<T>>::shared_from_this().use_count(); }
+  [[nodiscard]] long use_count() const {
+    return std::enable_shared_from_this<ExpressionCell<T>>::shared_from_this().use_count();
+  }
 
   /** @getter{kind, expression cell} */
   [[nodiscard]] ExpressionKind kind() const { return kind_; }
@@ -277,7 +279,7 @@ class BinaryExpressionCell : public ExpressionCell<T> {
    * @param v2 second value
    * @return evaluation result
    */
-  [[nodiscard]] virtual T do_evaluate(T v1, T v2) const = 0;
+  [[nodiscard]] virtual T do_evaluate(const T& v1, const T& v2) const = 0;
 
  private:
   const Expression<T> e1_;  ///< The first argument of the binary expression.
@@ -502,19 +504,56 @@ class ExpressionMul : public ExpressionCell<T> {
 template <class T>
 class ExpressionPow : public BinaryExpressionCell<T> {
  public:
+  static const ExpressionKind expression_kind = ExpressionKind::Pow;
   static void check_domain(const T& v1, const T& v2);
 
   NEW_OPERATOR_PARAMS(ExpressionPow, PARAMS(const Expression<T>& e1, const Expression<T>& e2), PARAMS(e1, e2));
 
+  Expression<T> evaluate_partial(const Environment<T>& env) const override;
   Expression<T> expand() const override;
   Expression<T> substitute(const Substitution<T>& s) const override;
   Expression<T> differentiate(const Variable& x) const override;
   std::ostream& display(std::ostream& os) const override;
+
+ protected:
+  T do_evaluate(const T& v1, const T& v2) const override;
 };
 
-EXTERNAL_TEMPLATE_INSTANTIATION_NUMERIC(ExpressionCell);
-EXTERNAL_TEMPLATE_INSTANTIATION_NUMERIC(ExpressionConstant);
-EXTERNAL_TEMPLATE_INSTANTIATION_NUMERIC(ExpressionVar);
-EXTERNAL_TEMPLATE_INSTANTIATION_NUMERIC(ExpressionNaN);
+/**
+ * Symbolic expression representing the power function.
+ *
+ * The expression holds two other expressions internally.
+ * Let @f$ x @f$ be the first expression and @f$ y @f$ be the second expression.
+ * The ExpressionPow cell represents the following expression:
+ * @f[
+ * x^y
+ * @f]
+ * @tparam T type of the expression evaluation
+ */
+template <class T>
+class ExpressionDiv : public BinaryExpressionCell<T> {
+ public:
+  static const ExpressionKind expression_kind = ExpressionKind::Div;
+  static void check_domain(const T& v1, const T& v2);
+
+  NEW_OPERATOR_PARAMS(ExpressionDiv, PARAMS(const Expression<T>& e1, const Expression<T>& e2), PARAMS(e1, e2));
+
+  Expression<T> expand() const override;
+  Expression<T> evaluate_partial(const Environment<T>& env) const override;
+  Expression<T> substitute(const Substitution<T>& s) const override;
+  Expression<T> differentiate(const Variable& x) const override;
+  std::ostream& display(std::ostream& os) const override;
+
+ protected:
+  T do_evaluate(const T& v1, const T& v2) const override;
+};
+
+// EXTERNAL_TEMPLATE_INSTANTIATION_NUMERIC(ExpressionCell);
+// EXTERNAL_TEMPLATE_INSTANTIATION_NUMERIC(ExpressionConstant);
+// EXTERNAL_TEMPLATE_INSTANTIATION_NUMERIC(ExpressionVar);
+// EXTERNAL_TEMPLATE_INSTANTIATION_NUMERIC(ExpressionNaN);
+// EXTERNAL_TEMPLATE_INSTANTIATION_NUMERIC(ExpressionAdd);
+// EXTERNAL_TEMPLATE_INSTANTIATION_NUMERIC(ExpressionMul);
+// EXTERNAL_TEMPLATE_INSTANTIATION_NUMERIC(ExpressionPow);
 
 }  // namespace smats

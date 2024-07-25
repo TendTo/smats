@@ -19,7 +19,6 @@ class TestExpression : public ::testing::Test {
   const Variable x_{"x"};
   const Variable y_{"y"};
   const Variable z_{"z"};
-  Expression<T> zero_{0};
 };
 
 using TestParams = ::testing::Types<int, long, float, double>;

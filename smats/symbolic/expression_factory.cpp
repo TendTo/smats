@@ -8,6 +8,7 @@
 #include <utility>
 
 #include "smats/symbolic/expression_cell.h"
+#include "smats/symbolic/symbolic_util.h"
 #include "smats/util/error.h"
 
 namespace smats {
@@ -159,10 +160,10 @@ ExpressionMulFactory<T>::ExpressionMulFactory(const ExpressionCell<T> &e) : cons
       base_to_exponent_map_ = e.template to<ExpressionMul>().base_to_exponent_map();
       break;
     case ExpressionKind::Pow:
-      SMATS_NOT_IMPLEMENTED();
-      // return AddTerm(get_first_argument(e), get_second_argument(e));
+      base_to_exponent_map_[e.template to<ExpressionPow>().lhs()] = e.template to<ExpressionPow>().rhs();
+      break;
     default:
-      base_to_exponent_map_.emplace(Expression<T>{e.ptr()}, Expression<T>::one());
+      base_to_exponent_map_.emplace(e.to_expression(), Expression<T>::one());
       break;
   }
 }
@@ -206,8 +207,7 @@ ExpressionMulFactory<T> &ExpressionMulFactory<T>::operator*=(const ExpressionCel
       }
       return *this;
     case ExpressionKind::Pow:
-      SMATS_NOT_IMPLEMENTED();
-      // return MultiplyTerm(get_first_argument(e), get_second_argument(e));
+      return multiply(o.template to<ExpressionPow>().lhs(), o.template to<ExpressionPow>().rhs());
     default:
       base_to_exponent_map_[Expression<T>{o.ptr()}] += Expression<T>::one();
       return *this;
@@ -244,22 +244,17 @@ ExpressionMulFactory<T> &ExpressionMulFactory<T>::multiply(
 template <class T>
 ExpressionMulFactory<T> &ExpressionMulFactory<T>::multiply(const Expression<T> &base, const Expression<T> &exponent) {
   // The following assertion holds because of ExpressionMulFactory::AddExpression.
-#if 0
-  assert(!(is_constant(base) && is_constant(exponent)));
   if (base.is_pow() && exponent.is_constant()) {
-    const Expression<T> &e2{get_second_argument(base)};
-    if (e2.is_constant()) {
-      const T &e2_value = e2.constant();
-      if (is_integer(e2_value)) {
-        // If base = pow(e1, e2) and both of e2 and exponent are
-        // integers, then add (e1, e2 * exponent).
+    const Expression<T> &base_exponent = base.rhs();
+    if (base_exponent.is_constant()) {
+      const T &base_exponent_value = base_exponent.constant();
+      if (is_integer(base_exponent_value)) {
+        // If base = pow(e1, e2) and both of e2 and exponent are integers, add (e1, e2 * exponent).
         // Example: (x^2)^3 => x^(2 * 3)
-        const Expression<T> &e1{get_first_argument(base)};
-        return multiply(e1, e2 * exponent);
+        return multiply(base.lhs(), base_exponent_value * exponent);
       }
     }
   }
-#endif
 
   const auto it(base_to_exponent_map_.find(base));
   if (it != base_to_exponent_map_.end()) {
@@ -271,8 +266,8 @@ ExpressionMulFactory<T> &ExpressionMulFactory<T>::multiply(const Expression<T> &
     new_exponent += exponent;
     if (new_exponent.is_constant(0)) {
       // If it ends up with base^0 (= 1.0) then remove this entry from the map.
-      // TODO(soonho-tri): The following operation is not sound since it can
-      // cancels `base` which might include 0/0 problems.
+      // TODO(soonho-tri): The following operation is not sound
+      //  since it can cancels `base` which might include 0/0 problems.
       base_to_exponent_map_.erase(it);
     }
   } else {

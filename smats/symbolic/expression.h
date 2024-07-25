@@ -325,6 +325,7 @@ class Expression {
   void hash(InvocableHashAlgorithm auto& hasher) const noexcept { cell_->hash(hasher); }
 
   ARITHMETIC_OPERATORS(Expression<T>)
+  GENERIC_ARITHMETIC_OPERATORS(Expression<T>, T&)
   Expression<T> operator-() const;
   Expression<T>& operator++();
   Expression<T> operator++(int);
@@ -350,6 +351,8 @@ class Expression {
 
   [[nodiscard]] const T& constant() const;
   [[nodiscard]] const std::map<Expression<T>, T>& expression_to_coeff_map() const;
+  [[nodiscard]] const Expression<T>& lhs() const;
+  [[nodiscard]] const Expression<T>& rhs() const;
 
   /** @getter{reference count, underlying expression cell} */
   [[nodiscard]] long use_count() const { return cell_.use_count(); }
@@ -368,6 +371,17 @@ class Expression {
 
   std::shared_ptr<const ExpressionCell<T>> cell_;
 };
+
+template <class T>
+Expression<T> operator+(const T& c, const Expression<T>& e);
+template <class T>
+Expression<T> operator-(const T& c, const Expression<T>& e);
+template <class T>
+Expression<T> operator*(const T& c, const Expression<T>& e);
+template <class T>
+Expression<T> operator/(const T& c, const Expression<T>& e);
+template <class T>
+Expression<T> operator^(const T& c, const Expression<T>& e);
 
 template <class T>
 std::ostream& operator<<(std::ostream& os, const Expression<T>& e);

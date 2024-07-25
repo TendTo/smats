@@ -10,6 +10,7 @@
 
 #include "smats/symbolic/expression_cell.h"
 #include "smats/symbolic/expression_factory.h"
+#include "smats/symbolic/symbolic_util.h"
 #include "smats/util/error.h"
 
 namespace smats {
@@ -40,10 +41,14 @@ Variables Expression<T>::variables() const {
 
 template <class T>
 bool Expression<T>::equal_to(const Expression<T>& e) const {
-  return false;
+  if (cell_ == e.cell_) return true;
+  if (kind() != e.kind()) return false;
+  return cell_->equal_to(*e.cell_);
 }
 template <class T>
 bool Expression<T>::less(const Expression<T>& e) const {
+  if (kind() < e.kind()) return true;
+  if (e.kind() < kind()) return false;
   return cell_->less(*e.cell_);
 }
 template <class T>
@@ -137,11 +142,32 @@ const T& Expression<T>::constant() const {
       SMATS_UNREACHABLE();
   }
 }
-
 template <class T>
 const std::map<Expression<T>, T>& Expression<T>::expression_to_coeff_map() const {
   SMATS_ASSERT(is_addition(), "Expression is not an addition");
   return cell_->template to<ExpressionAdd>().expr_to_coeff_map();
+}
+template <class T>
+const Expression<T>& Expression<T>::lhs() const {
+  switch (cell_->kind()) {
+    case ExpressionKind::Pow:
+      return cell_->template to<ExpressionPow>().lhs();
+    case ExpressionKind::Div:
+      return cell_->template to<ExpressionDiv>().lhs();
+    default:
+      SMATS_UNREACHABLE();
+  }
+}
+template <class T>
+const Expression<T>& Expression<T>::rhs() const {
+  switch (cell_->kind()) {
+    case ExpressionKind::Pow:
+      return cell_->template to<ExpressionPow>().rhs();
+    case ExpressionKind::Div:
+      return cell_->template to<ExpressionDiv>().rhs();
+    default:
+      SMATS_UNREACHABLE();
+  }
 }
 
 template <class T>
@@ -185,6 +211,107 @@ Expression<T> Expression<T>::operator-() const {
     return factory.build();
   }
   return Expression<T>{-1} * *this;
+}
+
+template <class T>
+Expression<T>& Expression<T>::operator+=(const T& o) {
+  // Simplification: 0 + E => E
+  if (is_constant(0)) return *this = o;
+  // Simplification: E + 0 => E
+  // Simplification: E(c1) + E(c2) => E(c1 + c2)
+  if (is_constant()) {
+    if (cell_.use_count() == 1) {
+      m_cell().template to<ExpressionConstant>().m_value() += o;
+      return *this;
+    } else {
+      return *this = Expression{constant() + o};
+    }
+  }
+  ExpressionAddFactory<T> factory{is_addition() ? *this : o};
+  factory += is_addition() ? o : *this;
+  return *this = factory.build();
+}
+template <class T>
+Expression<T>& Expression<T>::operator-=(const T& o) {
+  if (is_constant()) {
+    if (cell_.use_count() == 1) {
+      m_cell().template to<ExpressionConstant>().m_value() -= o;
+      return *this;
+    } else {
+      return *this = Expression{constant() - o};
+    }
+  }
+  return *this += -o;
+}
+template <class T>
+Expression<T>& Expression<T>::operator*=(const T& o) {
+  // Simplification: 1 * o => o
+  if (is_constant(1)) return *this = o;
+  // Simplification: 0 * o => 0
+  if (is_constant(0)) return *this;
+  // Simplification: E * 1 => E
+  if (o == 1) return *this;
+  // Simplification: E * 0 => 0
+  if (o == 0) return *this = Expression::zero();
+  // Simplification: (lhs / rhs) * o => (lhs * o) / rhs
+  if (is_division()) return *this = (lhs() * o) / rhs();
+  // Simplification: E(c1) * o => E(c1 * o)
+  if (is_constant()) {
+    if (cell_.use_count() == 1) {
+      m_cell().template to<ExpressionConstant>().m_value() *= o;
+      return *this;
+    } else {
+      return *this = Expression{constant() * o};
+    }
+  }
+  // Simplification: -1 * E => -E
+  if (o == -1) {
+    if (is_addition()) {
+      ExpressionAddFactory<T> factory{*this};
+      factory.negate();
+      return *this = factory.build();
+    }
+    if (is_multiplication()) {
+      ExpressionMulFactory<T> factory{*this};
+      factory.negate();
+      return *this = factory.build();
+    }
+  }
+
+  if (is_pow()) {
+    const Expression& base = lhs();
+    if (base.equal_to(o)) {
+      // Simplification: pow(e1, e2) * e1 => pow(e1, e2 + 1)
+      // TODO(soonho-tri): This simplification is not sound.
+      const Expression& exponent = rhs();
+      return *this = base ^ (exponent + 1);
+    }
+  }
+
+  // Simplification: flattening
+  ExpressionMulFactory<T> mul_factory{is_multiplication() ? *this : o};
+  mul_factory *= is_multiplication() ? o : *this;
+  return *this = mul_factory.build();
+}
+template <class T>
+Expression<T>& Expression<T>::operator/=(const T& o) {
+  // Simplification: E / 0 => NaN
+  if (o == 0) return *this = Expression<T>::NaN();
+  // Simplification: 0 / E => 0
+  if (is_constant(0)) return *this;
+  // Simplification: E / 1 => E
+  if (o == 1) return *this;
+  if (is_constant(o)) return *this = Expression<T>::one();
+  // Simplification: E(c1) / E(c2) => E(c1 / c2)
+  if (is_constant()) {
+    if (cell_.use_count() == 1) {
+      m_cell().template to<ExpressionConstant>().m_value() /= o;
+      return *this;
+    } else {
+      return *this = Expression{constant() / o};
+    }
+  }
+  return *this *= Expression<T>{ExpressionDiv<T>::New(*this, o)};
 }
 
 template <class T>
@@ -263,16 +390,64 @@ Expression<T>& Expression<T>::operator*=(const Expression<T>& o) {
       return *this = factory.build();
     }
   }
-  SMATS_UNREACHABLE();
+  // Simplification: (E1 / E2) * (E3 / E4) => (E1 * E3) / (E2 * E4)
+  if (is_division() && o.is_division()) {
+    return *this = (lhs() * o.lhs()) / (rhs() * o.rhs());
+  }
+  // Simplification: (c / E) * rhs => (c * rhs) / E
+  if (is_division() && lhs().is_constant()) {
+    return *this = (lhs().constant() * o) / rhs();
+  }
+  // Simplification: lhs * (c / E) => (c * lhs) / E
+  if (o.is_division() && o.lhs().is_constant()) {
+    return *this = (o.lhs().constant() * lhs()) / o.rhs();
+  }
+  // Pow-related simplifications.
+  if (is_pow()) {
+    const Expression& base = lhs();
+    if (o.is_pow()) {
+      if (base.equal_to(o.lhs())) {
+        // Simplification: pow(e1, e2) * pow(e1, e4) => pow(e1, e2 + e4)
+        // TODO(soonho-tri): This simplification is not sound.
+        //  For example, x^4 * x^(-3) => x
+        //  The original expression `x^4 * x^(-3)` is evaluated to `nan` when x = 0
+        //  while the simplified expression `x` is evaluated to 0.
+        return *this = base ^ (rhs() + o.rhs());
+      }
+    }
+    if (base.equal_to(o)) {
+      // Simplification: pow(e1, e2) * e1 => pow(e1, e2 + 1)
+      // TODO(soonho-tri): This simplification is not sound.
+      return *this = base ^ (rhs() + 1);
+    }
+  } else {
+    if (o.is_pow()) {
+      const Expression& base = o.lhs();
+      if (base.equal_to(*this)) {
+        // Simplification: (lhs * rhs == e1 * pow(e1, e2)) => pow(e1, 1 + e2)
+        // TODO(soonho-tri): This simplification is not sound.
+        return *this = base ^ (o.rhs() + 1);
+      }
+    }
+  }
+  if (!is_multiplication() && !o.is_multiplication() && equal_to(o)) {
+    // Simplification: x * x => x^2 (=pow(x,2))
+    return *this = lhs() ^ 2;
+  }
+  // Simplification: flattening
+  ExpressionMulFactory<T> mul_factory{is_multiplication() ? *this : o};
+  mul_factory *= is_multiplication() ? o : *this;
+  return *this = mul_factory.build();
 }
 template <class T>
 Expression<T>& Expression<T>::operator/=(const Expression<T>& o) {
+  // Simplification: E / 0 => NaN
+  if (o.is_constant(0)) return *this = Expression::NaN();
   // Simplification: E / 1 => x
   if (o.is_constant(1)) return *this;
   // Simplification: 0 / E => 0
   if (is_constant(0)) return *this;
-  // Simplification: E / 0 => NaN
-  if (o.is_constant(0)) return *this = Expression::NaN();
+  if (equal_to(o)) return *this = Expression<T>::one();
   // Simplification: E(c1) / E(c2) => E(c1 / c2)
   if (is_constant() && o.is_constant()) {
     if (cell_.use_count() == 1) {
@@ -282,7 +457,7 @@ Expression<T>& Expression<T>::operator/=(const Expression<T>& o) {
       return *this = Expression{constant() / o.constant()};
     }
   }
-  SMATS_UNREACHABLE();
+  return *this *= Expression<T>{ExpressionDiv<T>::New(*this, o)};
 }
 
 template <class T>
@@ -324,18 +499,15 @@ Expression<T>& Expression<T>::operator^=(const Expression<T>& o) {
     // pow(E, 1) => E
     if (exp_value == 1) return *this;
   }
-  if (is_pow() && o.is_constant()) {
-    // pow(base, exponent) ^ e2 => pow(base, exponent * e2)
-    // only if both of exponent and e2 are integers.
-    const Expression<T>& pow_exponent{o.lhs()};
-    const T& pow_exponent_value = pow_exponent.constant();
+  if (is_pow() && rhs().is_constant() && o.is_constant()) {
+    // pow(base, exponent) ^ e2 => pow(base, exponent * e2) only if both of exponent and e2 are integers.
+    const T& pow_exponent_value = o.rhs().constant();
     const T& exponent_value = o.constant();
-    if (is_integer(v1) && is_integer(v2)) {
-      const Expression& base{get_first_argument(e1)};
-      return Expression{new ExpressionPow(base, v1 * v2)};
+    if (is_integer(pow_exponent_value) && is_integer(exponent_value)) {
+      return *this = Expression{ExpressionPow<T>::New(lhs(), Expression<T>{pow_exponent_value * exponent_value})};
     }
   }
-  return Expression<T>{ExpressionPow::New(e1, e2)};
+  return *this = Expression<T>{ExpressionPow<T>::New(*this, o)};
 }
 template <class T>
 Expression<T> Expression<T>::operator^(const Expression<T>& o) const {
@@ -345,11 +517,52 @@ Expression<T> Expression<T>::operator^(const Expression<T>& o) const {
 }
 
 template <class T>
+Expression<T> operator+(const T& c, const Expression<T>& e) {
+  return e + c;
+}
+template <class T>
+Expression<T> operator-(const T& c, const Expression<T>& e) {
+  return Expression<T>{c} -= e;
+}
+template <class T>
+Expression<T> operator*(const T& c, const Expression<T>& e) {
+  return e * c;
+}
+template <class T>
+Expression<T> operator/(const T& c, const Expression<T>& e) {
+  return Expression<T>{c} /= e;
+}
+template <class T>
+Expression<T> operator^(const T& c, const Expression<T>& e) {
+  return Expression<T>{c} ^= e;
+}
+
+template <class T>
 std::ostream& operator<<(std::ostream& os, const Expression<T>& expr) {
   return os << expr.to_string();
 }
 
 EXPLICIT_TEMPLATE_INSTANTIATION_NUMERIC(Expression);
+template Expression<int> operator+(const int& c, const Expression<int>& e);
+template Expression<long> operator+(const long& c, const Expression<long>& e);
+template Expression<double> operator+(const double& c, const Expression<double>& e);
+template Expression<float> operator+(const float& c, const Expression<float>& e);
+template Expression<int> operator-(const int& c, const Expression<int>& e);
+template Expression<long> operator-(const long& c, const Expression<long>& e);
+template Expression<double> operator-(const double& c, const Expression<double>& e);
+template Expression<float> operator-(const float& c, const Expression<float>& e);
+template Expression<int> operator*(const int& c, const Expression<int>& e);
+template Expression<long> operator*(const long& c, const Expression<long>& e);
+template Expression<double> operator*(const double& c, const Expression<double>& e);
+template Expression<float> operator*(const float& c, const Expression<float>& e);
+template Expression<int> operator/(const int& c, const Expression<int>& e);
+template Expression<long> operator/(const long& c, const Expression<long>& e);
+template Expression<double> operator/(const double& c, const Expression<double>& e);
+template Expression<float> operator/(const float& c, const Expression<float>& e);
+template Expression<int> operator^(const int& c, const Expression<int>& e);
+template Expression<long> operator^(const long& c, const Expression<long>& e);
+template Expression<double> operator^(const double& c, const Expression<double>& e);
+template Expression<float> operator^(const float& c, const Expression<float>& e);
 
 template std::ostream& operator<<(std::ostream& os, const Expression<int>& expr);
 template std::ostream& operator<<(std::ostream& os, const Expression<long>& expr);

@@ -8,39 +8,12 @@
 #include <limits>
 #include <numeric>
 
+#include "smats/symbolic/symbolic_util.h"
 #include "smats/util/error.h"
 
 namespace smats {
 
 namespace {
-
-/**
- * Helper function to check if a value @p v is an integer.
- *
- * A value is an integer if it is in the range of [int_min, int_max] and its fractional part is zero.
- * @tparam T type of the value
- * @param v value to check
- * @return true if @p v can be represented as an integer
- * @return false if @p v cannot be represented as an integer
- */
-template <class T>
-bool is_integer(const T& v);
-template <>
-bool is_integer(const int& v) {
-  return true;
-}
-template <>
-bool is_integer(const long& v) {
-  return std::numeric_limits<int>::lowest() <= v && v <= std::numeric_limits<int>::max();
-}
-template <>
-bool is_integer(const float& v) {
-  return modf(v, nullptr) == 0.0;
-}
-template <>
-bool is_integer(const double& v) {
-  return modf(v, nullptr) == 0.0;
-}
 
 // Helper function expanding (e1 * e2). It assumes that both of e1 and e2 are
 // already expanded.
@@ -159,12 +132,7 @@ Expression<T> expand_pow(const Expression<T>& base, const Expression<T>& exponen
  */
 template <class T>
 ExpressionCell<T>::ExpressionCell(const ExpressionKind kind, const bool is_polynomial, const bool is_expanded)
-    : kind_{kind}, is_polynomial_{is_polynomial}, is_expanded_{is_expanded} {
-  std::cout << "ExpressionCell constructor" << std::endl;
-  std::cout << "kind: " << kind << std::endl;
-  std::cout << "is_polynomial: " << is_polynomial << std::endl;
-  std::cout << "is_expanded: " << is_expanded << std::endl;
-}
+    : kind_{kind}, is_polynomial_{is_polynomial}, is_expanded_{is_expanded} {}
 
 /**
  * UnaryExpressionCell
@@ -227,8 +195,7 @@ bool BinaryExpressionCell<T>::less(const ExpressionCell<T>& e) const {
 }
 template <class T>
 T BinaryExpressionCell<T>::evaluate(const Environment<T>& env) const {
-  // TODO(ernesto): Use evaluate_impl
-  return (e1_.evaluate(env) + e2_.evaluate(env));
+  return do_evaluate(e1_.evaluate(env), e2_.evaluate(env));
 }
 
 /**
@@ -246,15 +213,15 @@ Variables ExpressionConstant<T>::variables() const {
   return Variables{};
 }
 template <class T>
-bool ExpressionConstant<T>::equal_to(const ExpressionCell<T>& e) const {
-  SMATS_ASSERT(e.kind() == ExpressionConstant<T>::kind(), "Expressions must have the same kind");
-  const auto& constant_e = static_cast<const ExpressionConstant&>(e);
+bool ExpressionConstant<T>::equal_to(const ExpressionCell<T>& o) const {
+  SMATS_ASSERT(o.kind() == ExpressionConstant<T>::kind(), "Expressions must have the same kind");
+  const ExpressionConstant<T>& constant_e = o.template to<ExpressionConstant>();
   return value_ == constant_e.value_;
 }
 template <class T>
-bool ExpressionConstant<T>::less(const ExpressionCell<T>& e) const {
-  SMATS_ASSERT(e.kind() == ExpressionConstant<T>::kind(), "Expressions must have the same kind");
-  const auto& constant_e = static_cast<const ExpressionConstant&>(e);
+bool ExpressionConstant<T>::less(const ExpressionCell<T>& o) const {
+  SMATS_ASSERT(o.kind() == ExpressionConstant<T>::kind(), "Expressions must have the same kind");
+  const ExpressionConstant<T>& constant_e = o.template to<ExpressionConstant>();
   return value_ < constant_e.value_;
 }
 template <class T>
@@ -299,13 +266,13 @@ Variables ExpressionVar<T>::variables() const {
 template <class T>
 bool ExpressionVar<T>::equal_to(const ExpressionCell<T>& e) const {
   SMATS_ASSERT(e.kind() == ExpressionVar<T>::kind(), "Expressions must have the same kind");
-  const auto& var_e = static_cast<const ExpressionVar&>(e);
+  const ExpressionVar<T>& var_e = e.template to<ExpressionVar>();
   return var_.equal_to(var_e.var_);
 }
 template <class T>
 bool ExpressionVar<T>::less(const ExpressionCell<T>& e) const {
   SMATS_ASSERT(e.kind() == ExpressionVar<T>::kind(), "Expressions must have the same kind");
-  const auto& var_e = static_cast<const ExpressionVar&>(e);
+  const ExpressionVar<T>& var_e = e.template to<ExpressionVar>();
   return var_.less(var_e.var_);
 }
 template <class T>
@@ -408,18 +375,18 @@ Variables ExpressionAdd<T>::variables() const {
 template <class T>
 bool ExpressionAdd<T>::equal_to(const ExpressionCell<T>& o) const {
   SMATS_ASSERT(o.kind() == ExpressionAdd<T>::kind(), "Expressions must have the same kind");
-  const auto& add_e = static_cast<const ExpressionAdd&>(o);
+  const ExpressionAdd<T>& add_e = o.template to<ExpressionAdd>();
   if (constant_ != add_e.constant_ || expr_to_coeff_map_.size() != add_e.expr_to_coeff_map_.size()) return false;
-  return std::equal(expr_to_coeff_map_.begin(), expr_to_coeff_map_.end(), add_e.expr_to_coeff_map_.begin(),
-                    [](const std::pair<const Expression<T>, const Expression<T>>& lhs,
-                       const std::pair<const Expression<T>, const Expression<T>>& rhs) {
-                      return lhs.first.equal_to(rhs.first) && lhs.second == rhs.second;
-                    });
+  return std::equal(
+      expr_to_coeff_map_.begin(), expr_to_coeff_map_.end(), add_e.expr_to_coeff_map_.begin(),
+      [](const std::pair<const Expression<T>, const T&> lhs, const std::pair<const Expression<T>, const T&> rhs) {
+        return lhs.first.equal_to(rhs.first) && lhs.second == rhs.second;
+      });
 }
 template <class T>
 bool ExpressionAdd<T>::less(const ExpressionCell<T>& o) const {
   SMATS_ASSERT(o.kind() == ExpressionAdd<T>::kind(), "Expressions must have the same kind");
-  const auto& add_e = static_cast<const ExpressionAdd&>(o);
+  const ExpressionAdd<T>& add_e = o.template to<ExpressionAdd>();
   if (constant_ < add_e.constant_) return true;
   if (add_e.constant_ < constant_) return false;
 
@@ -434,31 +401,31 @@ bool ExpressionAdd<T>::less(const ExpressionCell<T>& o) const {
 }
 template <class T>
 T ExpressionAdd<T>::evaluate(const Environment<T>& env) const {
-  return std::reduce(expr_to_coeff_map_.begin(), expr_to_coeff_map_.end(), constant_,
-                     [&env](T acc, const auto& p) { return acc + p.second * p.first.evaluate(env); });
+  return std::accumulate(expr_to_coeff_map_.begin(), expr_to_coeff_map_.end(), constant_,
+                         [&env](T acc, const auto& p) { return acc + p.second * p.first.evaluate(env); });
 }
 template <class T>
 Expression<T> ExpressionAdd<T>::expand() const {
   Expression<T> result{constant_};
-  for (const auto& [expr, coeff] : expr_to_coeff_map_) result += Expression{coeff * expr}.expand();
+  for (const auto& [expr, coeff] : expr_to_coeff_map_) result += Expression{expr * coeff}.expand();
   return result;
 }
 template <class T>
 Expression<T> ExpressionAdd<T>::evaluate_partial(const Environment<T>& env) const {
   Expression<T> result{constant_};
-  for (const auto& [expr, coeff] : expr_to_coeff_map_) result += coeff * Expression{expr}.evaluate_partial(env);
+  for (const auto& [expr, coeff] : expr_to_coeff_map_) result += Expression{expr}.evaluate_partial(env) * coeff;
   return result;
 }
 template <class T>
 Expression<T> ExpressionAdd<T>::substitute(const Substitution<T>& s) const {
   Expression<T> result{constant_};
-  for (const auto& [expr, coeff] : expr_to_coeff_map_) result += coeff * Expression{expr}.substitute(s);
+  for (const auto& [expr, coeff] : expr_to_coeff_map_) result += Expression{expr}.substitute(s) * coeff;
   return result;
 }
 template <class T>
 Expression<T> ExpressionAdd<T>::differentiate(const Variable& x) const {
   Expression<T> result{0};
-  for (const auto& [expr, coeff] : expr_to_coeff_map_) result += coeff * Expression{expr}.differentiate(x);
+  for (const auto& [expr, coeff] : expr_to_coeff_map_) result += Expression{expr}.differentiate(x) * coeff;
   return result;
 }
 template <class T>
@@ -498,7 +465,7 @@ std::ostream& ExpressionAdd<T>::display_term(std::ostream& os, const bool print_
  */
 template <class T>
 ExpressionMul<T>::ExpressionMul(ExpressionCell<T>::Private, T constant, ExpressionMap base_to_exponent_map)
-    : ExpressionCell<T>{ExpressionKind::Add, true, true},
+    : ExpressionCell<T>{ExpressionKind::Mul, true, true},
       constant_{std::move(constant)},
       base_to_exponent_map_{std::move(base_to_exponent_map)} {}
 template <class T>
@@ -518,7 +485,7 @@ Variables ExpressionMul<T>::variables() const {
 template <class T>
 bool ExpressionMul<T>::equal_to(const ExpressionCell<T>& o) const {
   SMATS_ASSERT(o.kind() == ExpressionMul<T>::kind(), "Expressions must have the same kind");
-  const auto& mul_e = static_cast<const ExpressionMul&>(o);
+  const ExpressionMul<T>& mul_e = o.template to<ExpressionMul>();
   if (constant_ != mul_e.constant_ || base_to_exponent_map_.size() != mul_e.base_to_exponent_map_.size()) return false;
   return std::equal(base_to_exponent_map_.begin(), base_to_exponent_map_.end(), mul_e.base_to_exponent_map_.begin(),
                     [](const std::pair<const Expression<T>, const Expression<T>>& lhs,
@@ -529,7 +496,7 @@ bool ExpressionMul<T>::equal_to(const ExpressionCell<T>& o) const {
 template <class T>
 bool ExpressionMul<T>::less(const ExpressionCell<T>& o) const {
   SMATS_ASSERT(o.kind() == ExpressionMul<T>::kind(), "Expressions must have the same kind");
-  const auto& mul_e = static_cast<const ExpressionMul&>(o);
+  const ExpressionMul<T>& mul_e = o.template to<ExpressionMul>();
   if (constant_ < mul_e.constant_) return true;
   if (mul_e.constant_ < constant_) return false;
 
@@ -608,7 +575,7 @@ std::ostream& ExpressionMul<T>::display_term(std::ostream& os, const bool print_
  * ExpressionPow
  */
 template <class T>
-ExpressionPow<T>::ExpressionPow(ExpressionCell<T>::Private p, const Expression<T>& base, const Expression<T>& exponent)
+ExpressionPow<T>::ExpressionPow(ExpressionCell<T>::Private, const Expression<T>& base, const Expression<T>& exponent)
     : BinaryExpressionCell<T>{ExpressionKind::Pow, base, exponent, true, true} {}
 
 template <class T>
@@ -620,6 +587,10 @@ Expression<T> ExpressionPow<T>::expand() const {
   return expand_pow(arg1_expanded, arg2_expanded);
 }
 template <class T>
+Expression<T> ExpressionPow<T>::evaluate_partial(const Environment<T>& env) const {
+  return BinaryExpressionCell<T>::lhs().evaluate_partial(env) ^ BinaryExpressionCell<T>::rhs().evaluate_partial(env);
+}
+template <class T>
 Expression<T> ExpressionPow<T>::substitute(const Substitution<T>& s) const {
   const Expression<T>& arg1 = BinaryExpressionCell<T>::lhs();
   const Expression<T>& arg2 = BinaryExpressionCell<T>::rhs();
@@ -629,12 +600,67 @@ Expression<T> ExpressionPow<T>::substitute(const Substitution<T>& s) const {
                                                                   : ExpressionCell<T>::to_expression();
 }
 template <class T>
+Expression<T> ExpressionPow<T>::differentiate(const Variable& x) const {
+  SMATS_NOT_IMPLEMENTED();
+}
+template <class T>
+std::ostream& ExpressionPow<T>::display(std::ostream& os) const {
+  return os << "(" << BinaryExpressionCell<T>::lhs() << " ^ " << BinaryExpressionCell<T>::rhs() << ")";
+}
+template <class T>
 void ExpressionPow<T>::check_domain(const T& v1, const T& v2) {
   if (std::isfinite(v1) && (v1 < 0.0) && std::isfinite(v2) && !is_integer(v2)) {
     SMATS_RUNTIME_ERROR_FMT(
         "pow({}, {}) : numerical argument out of domain. {} is finite negative and {} is finite non-integer", v1, v2,
         v1, v2);
   }
+}
+template <class T>
+T ExpressionPow<T>::do_evaluate(const T& num, const T& den) const {
+  check_domain(num, den);
+  return static_cast<T>(std::pow(num, den));
+}
+
+/**
+ * ExpressionDiv
+ */
+template <class T>
+ExpressionDiv<T>::ExpressionDiv(ExpressionCell<T>::Private, const Expression<T>& e1, const Expression<T>& e2)
+    : BinaryExpressionCell<T>{ExpressionKind::Div, e1, e2, e1.is_polynomial() && e2.is_constant(), false} {}
+template <class T>
+Expression<T> ExpressionDiv<T>::expand() const {
+  const Expression<T>& first = BinaryExpressionCell<T>::lhs();
+  const Expression<T>& second = BinaryExpressionCell<T>::rhs();
+  const Expression<T> e1{first.is_expanded() ? first : first.expand()};
+  const Expression<T> e2{second.is_expanded() ? second : second.expand()};
+  SMATS_NOT_IMPLEMENTED();
+  //  return e2.is_constant() ? expand_division(e1, e2) : e1 / e2;
+  //    return DivExpandVisitor{}.Simplify(e1, get_constant_value(e2));
+}
+template <class T>
+Expression<T> ExpressionDiv<T>::evaluate_partial(const Environment<T>& env) const {
+  return BinaryExpressionCell<T>::lhs().evaluate_partial(env) / BinaryExpressionCell<T>::rhs().evaluate_partial(env);
+}
+template <class T>
+T ExpressionDiv<T>::do_evaluate(const T& num, const T& den) const {
+  if (num == 0 && den == 0) SMATS_RUNTIME_ERROR("Indeterminate form: 0 / 0");
+  if (den == 0) SMATS_RUNTIME_ERROR_FMT("Division by zero: {} / 0", num);
+  return num / den;
+}
+template <class T>
+Expression<T> ExpressionDiv<T>::substitute(const Substitution<T>& s) const {
+  return BinaryExpressionCell<T>::lhs().substitute(s) / BinaryExpressionCell<T>::rhs().substitute(s);
+}
+template <class T>
+Expression<T> ExpressionDiv<T>::differentiate(const Variable& x) const {
+  // ∂/∂x (f / g) = (∂/∂x f * g - f * ∂/∂x g) / g^2
+  const Expression<T>& f{BinaryExpressionCell<T>::lhs()};
+  const Expression<T>& g{BinaryExpressionCell<T>::rhs()};
+  return (f.differentiate(x) * g - f * g.differentiate(x)) / (g ^ 2);
+}
+template <class T>
+std::ostream& ExpressionDiv<T>::display(std::ostream& os) const {
+  return os << "(" << BinaryExpressionCell<T>::lhs() << " / " << BinaryExpressionCell<T>::rhs() << ")";
 }
 
 EXPLICIT_TEMPLATE_INSTANTIATION_NUMERIC(ExpressionCell);
@@ -643,7 +669,9 @@ EXPLICIT_TEMPLATE_INSTANTIATION_NUMERIC(BinaryExpressionCell);
 EXPLICIT_TEMPLATE_INSTANTIATION_NUMERIC(ExpressionConstant);
 EXPLICIT_TEMPLATE_INSTANTIATION_NUMERIC(ExpressionVar);
 EXPLICIT_TEMPLATE_INSTANTIATION_NUMERIC(ExpressionNaN);
+EXPLICIT_TEMPLATE_INSTANTIATION_NUMERIC(ExpressionAdd);
 EXPLICIT_TEMPLATE_INSTANTIATION_NUMERIC(ExpressionMul);
 EXPLICIT_TEMPLATE_INSTANTIATION_NUMERIC(ExpressionPow);
+EXPLICIT_TEMPLATE_INSTANTIATION_NUMERIC(ExpressionDiv);
 
 }  // namespace smats
