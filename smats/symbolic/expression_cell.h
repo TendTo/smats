@@ -67,6 +67,9 @@ class ExpressionCell : public std::enable_shared_from_this<ExpressionCell<T>> {
     return std::enable_shared_from_this<ExpressionCell<T>>::shared_from_this();
   }
 
+  /** @getter{reference count, expression cell} */
+  long use_count() const { return std::enable_shared_from_this<ExpressionCell<T>>::shared_from_this().use_count(); }
+
   /** @getter{kind, expression cell} */
   [[nodiscard]] ExpressionKind kind() const { return kind_; }
 
@@ -254,9 +257,9 @@ class BinaryExpressionCell : public ExpressionCell<T> {
   [[nodiscard]] bool less(const ExpressionCell<T>& o) const override;
   [[nodiscard]] T evaluate(const Environment<T>& env) const override;
   /** @getter{first argument, binary expression} */
-  [[nodiscard]] const Expression<T>& get_first_argument() const { return e1_; }
+  [[nodiscard]] const Expression<T>& lhs() const { return e1_; }
   /** @getter{second argument, binary expression} */
-  [[nodiscard]] const Expression<T>& get_second_argument() const { return e2_; }
+  [[nodiscard]] const Expression<T>& rhs() const { return e2_; }
 
  protected:
   /**
@@ -376,7 +379,7 @@ class ExpressionNaN : public ExpressionCell<T> {
 /**
  * Symbolic expression representing the addition of multiple terms.
  *
- * The expression holds a constant term and a map from expressions to their coefficients internally.
+ * The expression holds a constant term and a map from expressions to their coefficients.
  * Let @f$ k @f$ be the constant term and @f$ E @f$ be the set of pairs @f$(c, e)@f$ where @f$ c @f$ is the coefficient
  * and @f$ e @f$ is the expression.
  * The ExpressionAdd cell represents the following expression:
@@ -391,13 +394,8 @@ class ExpressionAdd : public ExpressionCell<T> {
   using ExpressionMap = std::map<Expression<T>, T>;
   static const ExpressionKind expression_kind = ExpressionKind::Add;
 
-  //  NEW_OPERATOR_PARAMS(ExpressionAdd, PARAMS(T constant, ExpressionMap expr_to_coeff_map),
-  //                      PARAMS(constant, expr_to_coeff_map));
-
-  static std::shared_ptr<const ExpressionAdd<T>> New(T constant, ExpressionMap expr_to_coeff_map) {
-    return std::make_shared<const ExpressionAdd<T>>(typename ExpressionCell<T>::Private(), constant, expr_to_coeff_map);
-  }
-  ExpressionAdd(typename ExpressionCell<T>::Private, T constant, ExpressionMap expr_to_coeff_map);
+  NEW_OPERATOR_PARAMS(ExpressionAdd, PARAMS(T constant, ExpressionMap expr_to_coeff_map),
+                      PARAMS(constant, expr_to_coeff_map));
 
   void hash(DelegatingHasher&) const override;
   [[nodiscard]] Variables variables() const override;
@@ -415,6 +413,7 @@ class ExpressionAdd : public ExpressionCell<T> {
 
   /** @getter{map, addition expression} */
   [[nodiscard]] const ExpressionMap& expr_to_coeff_map() const { return expr_to_coeff_map_; }
+  /** @getsetter{map, addition expression} */
   ExpressionMap& m_expr_to_coeff_map() { return const_cast<ExpressionMap&>(expr_to_coeff_map_); }
 
  private:
@@ -431,6 +430,86 @@ class ExpressionAdd : public ExpressionCell<T> {
 
   const T constant_;                       ///< Constant term of the addition.
   const ExpressionMap expr_to_coeff_map_;  ///< Map from expressions to their coefficients.
+};
+
+/**
+ * Symbolic expression representing a multiplication of powers.
+ *
+ * The expression holds a constant term and a map from expressions to their coefficients.
+ * Let @f$ k @f$ be the constant term and @f$ E @f$ be the set of pairs @f$(b, e)@f$ where @f$ b @f$ is the base
+ * and @f$ e @f$ is the exponent.
+ * The ExpressionMul cell represents the following expression:
+ * @f[
+ *     k \cdot \prod_{(b, e) \in E} b^e
+ * @f]
+ */
+template <class T>
+class ExpressionMul : public ExpressionCell<T> {
+ public:
+  using ExpressionMap = std::map<Expression<T>, Expression<T>>;
+  static const ExpressionKind expression_kind = ExpressionKind::Mul;
+
+  NEW_OPERATOR_PARAMS(ExpressionMul, PARAMS(T constant, ExpressionMap expr_to_coeff_map),
+                      PARAMS(constant, expr_to_coeff_map));
+
+  void hash(DelegatingHasher&) const override;
+  [[nodiscard]] Variables variables() const override;
+  [[nodiscard]] bool equal_to(const ExpressionCell<T>& o) const override;
+  [[nodiscard]] bool less(const ExpressionCell<T>& o) const override;
+  [[nodiscard]] T evaluate(const Environment<T>& env) const override;
+  [[nodiscard]] Expression<T> evaluate_partial(const Environment<T>& env) const override;
+  [[nodiscard]] Expression<T> expand() const override;
+  [[nodiscard]] Expression<T> substitute(const Substitution<T>& s) const override;
+  [[nodiscard]] Expression<T> differentiate(const Variable& x) const override;
+  std::ostream& display(std::ostream& os) const override;
+  /** @getter{constant, addition expression} */
+  [[nodiscard]] const T& constant() const { return constant_; }
+  T& m_constant() { return const_cast<T&>(constant_); }
+
+  /** @getter{map, multiplication expression} */
+  [[nodiscard]] const ExpressionMap& base_to_exponent_map() const { return base_to_exponent_map_; }
+  /** @getsetter{map, multiplication expression} */
+  ExpressionMap& m_base_to_exponent_map() { return const_cast<ExpressionMap&>(base_to_exponent_map_); }
+
+ private:
+  static Variables extract_variables(const ExpressionMap& base_to_exponent_map);
+  /**
+   * Utility function used to display a single term in a pretty format.
+   * @param os output stream
+   * @param print_mul whether to print a multiplication symbol at the beginning
+   * @param base base of the term
+   * @param exponent exponent of the term
+   * @return updated output stream
+   */
+  std::ostream& display_term(std::ostream& os, bool print_mul, const Expression<T>& base,
+                             const Expression<T>& exponent) const;
+
+  const T constant_;                          ///< Constant term of the multiplication.
+  const ExpressionMap base_to_exponent_map_;  ///< Map from expressions to their exponent.
+};
+
+/**
+ * Symbolic expression representing the power function.
+ *
+ * The expression holds two other expressions internally.
+ * Let @f$ x @f$ be the first expression and @f$ y @f$ be the second expression.
+ * The ExpressionPow cell represents the following expression:
+ * @f[
+ * x^y
+ * @f]
+ * @tparam T type of the expression evaluation
+ */
+template <class T>
+class ExpressionPow : public BinaryExpressionCell<T> {
+ public:
+  static void check_domain(const T& v1, const T& v2);
+
+  NEW_OPERATOR_PARAMS(ExpressionPow, PARAMS(const Expression<T>& e1, const Expression<T>& e2), PARAMS(e1, e2));
+
+  Expression<T> expand() const override;
+  Expression<T> substitute(const Substitution<T>& s) const override;
+  Expression<T> differentiate(const Variable& x) const override;
+  std::ostream& display(std::ostream& os) const override;
 };
 
 EXTERNAL_TEMPLATE_INSTANTIATION_NUMERIC(ExpressionCell);

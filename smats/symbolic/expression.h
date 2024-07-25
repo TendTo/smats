@@ -91,6 +91,8 @@ template <class T>
 class Formula;  // In formula.h
 template <class T>
 class ExpressionAddFactory;  // In expression_factory.h
+template <class T>
+class ExpressionMulFactory;  // In expression_factory.h
 
 /**
 * Represents a symbolic form of an expression.
@@ -183,6 +185,7 @@ template <class T>
 class Expression {
   friend class ExpressionCell<T>;
   friend class ExpressionAddFactory<T>;
+  friend class ExpressionMulFactory<T>;
 
  public:
   static Expression<T> zero();
@@ -327,6 +330,8 @@ class Expression {
   Expression<T> operator++(int);
   Expression<T>& operator--();
   Expression<T> operator--(int);
+  Expression<T>& operator^=(const Expression<T>& o);
+  Expression<T> operator^(const Expression<T>& o) const;
 
   // Cast functions which takes a pointer to a non-const Expression.
   [[nodiscard]] bool is_constant() const;
@@ -335,8 +340,16 @@ class Expression {
   [[nodiscard]] bool is_variable(const Variable& var) const;
   [[nodiscard]] bool is_addition() const;
   [[nodiscard]] bool is_multiplication() const;
+  [[nodiscard]] bool is_division() const;
+  [[nodiscard]] bool is_nan() const;
+  [[nodiscard]] bool is_pow() const;
+  template <ExpressionKind K>
+  [[nodiscard]] bool is() const {
+    return cell_->kind() == K;
+  }
 
-  [[nodiscard]] const T& constant_value() const;
+  [[nodiscard]] const T& constant() const;
+  [[nodiscard]] const std::map<Expression<T>, T>& expression_to_coeff_map() const;
 
   /** @getter{reference count, underlying expression cell} */
   [[nodiscard]] long use_count() const { return cell_.use_count(); }
@@ -369,6 +382,7 @@ using ExpressionL = Expression<long>;
 }  // namespace smats
 
 namespace std {
+
 /* Provides std::hash<smats::Expression>. */
 template <class T>
 struct hash<smats::Expression<T>> : public smats::DefaultHash {};
