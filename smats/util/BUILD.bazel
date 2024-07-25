@@ -68,6 +68,13 @@ smats_cc_library(
 )
 
 smats_cc_library(
+    name = "visitor",
+    hdrs = ["visitor.h"],
+    hdrs = ["visitor.cpp"],
+    deps = [":concepts"],
+)
+
+smats_cc_library(
     name = "fmt_ostream",
     hdrs = ["fmt_ostream.h"],
     deps = [

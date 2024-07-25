@@ -63,10 +63,30 @@ smats_cc_library(
     deps = [
         ":environment",
         ":expression_kind",
+        ":symbolic_util",
         ":variable",
         ":variables",
         "//smats/util:definitions",
         "//smats/util:hash",
+    ],
+)
+
+smats_cc_library(
+    name = "symbolic_util",
+    srcs = ["symbolic_util.cpp"],
+    hdrs = ["symbolic_util.h"],
+    implementation_deps = ["//smats/util:error"],
+)
+
+smats_cc_library(
+    name = "expression_visitor",
+    srcs = ["expression_visitor.cpp"],
+    hdrs = ["expression_visitor.h"],
+    implementation_deps = [
+        ":expression",
+        ":expression_kind",
+        "//smats/util:exception",
+        "//smats/util:visitor",
     ],
 )
 
