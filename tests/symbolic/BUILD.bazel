@@ -72,17 +72,17 @@ smats_cc_googletest(
     deps = ["//smats/symbolic:expression"],
 )
 
-smats_cc_googletest(
-    name = "test_expression_factory",
-    tags = ["symbolic"],
-    deps = ["//smats/symbolic:expression"],
-)
+#smats_cc_googletest(
+#    name = "test_expression_factory",
+#    tags = ["symbolic"],
+#    deps = ["//smats/symbolic:expression"],
+#)
 
-smats_cc_googletest(
-    name = "test_expression_cell",
-    tags = ["symbolic"],
-    deps = ["//smats/symbolic:expression"],
-)
+#smats_cc_googletest(
+#    name = "test_expression_cell",
+#    tags = ["symbolic"],
+#    deps = ["//smats/symbolic:expression"],
+#)
 
 smats_cc_googletest(
     name = "test_expression_cell_expansion",

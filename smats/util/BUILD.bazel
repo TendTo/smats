@@ -70,7 +70,7 @@ smats_cc_library(
 smats_cc_library(
     name = "visitor",
     hdrs = ["visitor.h"],
-    hdrs = ["visitor.cpp"],
+    srcs = ["visitor.cpp"],
     deps = [":concepts"],
 )
 
