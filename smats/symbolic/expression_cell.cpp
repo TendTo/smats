@@ -215,13 +215,13 @@ Variables ExpressionConstant<T>::variables() const {
 template <class T>
 bool ExpressionConstant<T>::equal_to(const ExpressionCell<T>& o) const {
   SMATS_ASSERT(o.kind() == ExpressionConstant<T>::kind(), "Expressions must have the same kind");
-  const ExpressionConstant<T>& constant_e = o.template to<ExpressionConstant>();
+  const ExpressionConstant<T>& constant_e = o.template to<::smats::ExpressionConstant>();
   return value_ == constant_e.value_;
 }
 template <class T>
 bool ExpressionConstant<T>::less(const ExpressionCell<T>& o) const {
   SMATS_ASSERT(o.kind() == ExpressionConstant<T>::kind(), "Expressions must have the same kind");
-  const ExpressionConstant<T>& constant_e = o.template to<ExpressionConstant>();
+  const ExpressionConstant<T>& constant_e = o.template to<::smats::ExpressionConstant>();
   return value_ < constant_e.value_;
 }
 template <class T>
@@ -266,13 +266,13 @@ Variables ExpressionVar<T>::variables() const {
 template <class T>
 bool ExpressionVar<T>::equal_to(const ExpressionCell<T>& e) const {
   SMATS_ASSERT(e.kind() == ExpressionVar<T>::kind(), "Expressions must have the same kind");
-  const ExpressionVar<T>& var_e = e.template to<ExpressionVar>();
+  const ExpressionVar<T>& var_e = e.template to<::smats::ExpressionVar>();
   return var_.equal_to(var_e.var_);
 }
 template <class T>
 bool ExpressionVar<T>::less(const ExpressionCell<T>& e) const {
   SMATS_ASSERT(e.kind() == ExpressionVar<T>::kind(), "Expressions must have the same kind");
-  const ExpressionVar<T>& var_e = e.template to<ExpressionVar>();
+  const ExpressionVar<T>& var_e = e.template to<::smats::ExpressionVar>();
   return var_.less(var_e.var_);
 }
 template <class T>
@@ -375,7 +375,7 @@ Variables ExpressionAdd<T>::variables() const {
 template <class T>
 bool ExpressionAdd<T>::equal_to(const ExpressionCell<T>& o) const {
   SMATS_ASSERT(o.kind() == ExpressionAdd<T>::kind(), "Expressions must have the same kind");
-  const ExpressionAdd<T>& add_e = o.template to<ExpressionAdd>();
+  const ExpressionAdd<T>& add_e = o.template to<::smats::ExpressionAdd>();
   if (constant_ != add_e.constant_ || expr_to_coeff_map_.size() != add_e.expr_to_coeff_map_.size()) return false;
   return std::equal(
       expr_to_coeff_map_.begin(), expr_to_coeff_map_.end(), add_e.expr_to_coeff_map_.begin(),
@@ -386,7 +386,7 @@ bool ExpressionAdd<T>::equal_to(const ExpressionCell<T>& o) const {
 template <class T>
 bool ExpressionAdd<T>::less(const ExpressionCell<T>& o) const {
   SMATS_ASSERT(o.kind() == ExpressionAdd<T>::kind(), "Expressions must have the same kind");
-  const ExpressionAdd<T>& add_e = o.template to<ExpressionAdd>();
+  const ExpressionAdd<T>& add_e = o.template to<::smats::ExpressionAdd>();
   if (constant_ < add_e.constant_) return true;
   if (add_e.constant_ < constant_) return false;
 
@@ -489,7 +489,7 @@ Variables ExpressionMul<T>::variables() const {
 template <class T>
 bool ExpressionMul<T>::equal_to(const ExpressionCell<T>& o) const {
   SMATS_ASSERT(o.kind() == ExpressionMul<T>::kind(), "Expressions must have the same kind");
-  const ExpressionMul<T>& mul_e = o.template to<ExpressionMul>();
+  const ExpressionMul<T>& mul_e = o.template to<::smats::ExpressionMul>();
   if (constant_ != mul_e.constant_ || base_to_exponent_map_.size() != mul_e.base_to_exponent_map_.size()) return false;
   return std::equal(base_to_exponent_map_.begin(), base_to_exponent_map_.end(), mul_e.base_to_exponent_map_.begin(),
                     [](const std::pair<const Expression<T>, const Expression<T>>& lhs,
@@ -500,7 +500,7 @@ bool ExpressionMul<T>::equal_to(const ExpressionCell<T>& o) const {
 template <class T>
 bool ExpressionMul<T>::less(const ExpressionCell<T>& o) const {
   SMATS_ASSERT(o.kind() == ExpressionMul<T>::kind(), "Expressions must have the same kind");
-  const ExpressionMul<T>& mul_e = o.template to<ExpressionMul>();
+  const ExpressionMul<T>& mul_e = o.template to<::smats::ExpressionMul>();
   if (constant_ < mul_e.constant_) return true;
   if (mul_e.constant_ < constant_) return false;
 
@@ -623,6 +623,10 @@ void ExpressionPow<T>::check_domain(const T& v1, const T& v2) {
         v1, v2);
   }
 }
+template <>
+void ExpressionPow<int>::check_domain(const int& v1, const int& v2) {}
+template <>
+void ExpressionPow<long>::check_domain(const long& v1, const long& v2) {}
 template <class T>
 T ExpressionPow<T>::do_evaluate(const T& num, const T& den) const {
   check_domain(num, den);
