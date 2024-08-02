@@ -16,12 +16,12 @@
 namespace smats {
 
 template <class T>
-Expression<T>::Expression() : cell_{Expression<T>::zero().cell().ptr()} {}
+Expression<T>::Expression() : cell_{Expression<T>::zero().cell().shared_from_this()} {}
 
 template <class T>
 Expression<T>::Expression(const T& value)
-    : cell_{value == 0   ? Expression<T>::zero().cell().ptr()
-            : value == 1 ? Expression<T>::one().cell().ptr()
+    : cell_{value == 0   ? Expression<T>::zero().cell().shared_from_this()
+            : value == 1 ? Expression<T>::one().cell().shared_from_this()
                          : ExpressionConstant<T>::New(value)} {}
 
 template <class T>

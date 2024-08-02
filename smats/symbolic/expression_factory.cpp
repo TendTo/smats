@@ -35,7 +35,7 @@ ExpressionAddFactory<T>::ExpressionAddFactory(const ExpressionCell<T> &e) : cons
       expr_to_coeff_map_ = e.template to<ExpressionAdd>().expr_to_coeff_map();
       break;
     default:
-      expr_to_coeff_map_[Expression<T>{e.ptr()}] = 1;
+      expr_to_coeff_map_[e.to_expression()] = 1;
       break;
   }
 }
@@ -82,7 +82,7 @@ ExpressionAddFactory<T> &ExpressionAddFactory<T>::operator+=(const ExpressionCel
       }
       break;
     default:
-      expr_to_coeff_map_[Expression<T>{o.ptr()}] += 1;
+      expr_to_coeff_map_[o.to_expression()] += 1;
       break;
   }
   return *this;
@@ -209,7 +209,7 @@ ExpressionMulFactory<T> &ExpressionMulFactory<T>::operator*=(const ExpressionCel
     case ExpressionKind::Pow:
       return multiply(o.template to<ExpressionPow>().lhs(), o.template to<ExpressionPow>().rhs());
     default:
-      base_to_exponent_map_[Expression<T>{o.ptr()}] += Expression<T>::one();
+      base_to_exponent_map_[o.to_expression()] += Expression<T>::one();
       return *this;
   }
 }

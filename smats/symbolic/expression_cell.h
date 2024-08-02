@@ -56,17 +56,6 @@ class ExpressionCell : public std::enable_shared_from_this<ExpressionCell<T>> {
   ExpressionCell() = delete;
   virtual ~ExpressionCell() = default;
 
-  /**
-   * Returns a shared pointer to this ExpressionCell.
-   *
-   * This is supposed to be the only way to create new shared pointer to an ExpressionCell,
-   * in order to minimize the number of instances of the same ExpressionCell while ensuring no memory leaks.
-   * @return shared pointer to this ExpressionCell
-   */
-  std::shared_ptr<const ExpressionCell<T>> ptr() const {
-    return std::enable_shared_from_this<ExpressionCell<T>>::shared_from_this();
-  }
-
   /** @getter{reference count, expression cell} */
   [[nodiscard]] long use_count() const {
     return std::enable_shared_from_this<ExpressionCell<T>>::shared_from_this().use_count();
@@ -128,7 +117,9 @@ class ExpressionCell : public std::enable_shared_from_this<ExpressionCell<T>> {
    * Create an Expression from this ExpressionCell.
    * @return Expression containing this ExpressionCell
    */
-  [[nodiscard]] Expression<T> to_expression() const { return Expression{ptr()}; }
+  [[nodiscard]] Expression<T> to_expression() const { return Expression{
+   std::enable_shared_from_this<ExpressionCell<T>>::shared_from_this()
+  }; }
 
   /**
    * Evaluates under a given environment (by default, an empty environment).

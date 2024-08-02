@@ -429,6 +429,10 @@ Expression<T> ExpressionAdd<T>::differentiate(const Variable& x) const {
   return result;
 }
 template <class T>
+Variables ExpressionAdd<T>::extract_variables([[maybe_unused]] const ExpressionMap& expr_to_coeff_map) {
+  SMATS_NOT_IMPLEMENTED();
+}
+template <class T>
 std::ostream& ExpressionAdd<T>::display(std::ostream& os) const {
   SMATS_ASSERT(!expr_to_coeff_map_.empty(), "ExpressionAdd must have at least one term");
   bool print_plus = false;
@@ -550,6 +554,10 @@ Expression<T> ExpressionMul<T>::differentiate(const Variable& x) const {
   SMATS_NOT_IMPLEMENTED();
 }
 template <class T>
+Variables ExpressionMul<T>::extract_variables([[maybe_unused]] const ExpressionMap& base_to_exponent_map) {
+  SMATS_NOT_IMPLEMENTED();
+}
+template <class T>
 std::ostream& ExpressionMul<T>::display(std::ostream& os) const {
   SMATS_ASSERT(!base_to_exponent_map_.empty(), "ExpressionMul must have at least one term");
   bool print_mul = false;
@@ -657,6 +665,10 @@ Expression<T> ExpressionDiv<T>::differentiate(const Variable& x) const {
   const Expression<T>& f{BinaryExpressionCell<T>::lhs()};
   const Expression<T>& g{BinaryExpressionCell<T>::rhs()};
   return (f.differentiate(x) * g - f * g.differentiate(x)) / (g ^ 2);
+}
+template <class T>
+void  ExpressionDiv<T>::check_domain(const T& v1, const T& v2) {
+  SMATS_NOT_IMPLEMENTED();
 }
 template <class T>
 std::ostream& ExpressionDiv<T>::display(std::ostream& os) const {
