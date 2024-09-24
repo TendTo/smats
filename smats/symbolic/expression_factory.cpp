@@ -66,7 +66,7 @@ ExpressionAddFactory<T> &ExpressionAddFactory<T>::operator+=(const std::shared_p
 }
 template <class T>
 ExpressionAddFactory<T> &ExpressionAddFactory<T>::operator+=(const ExpressionCell<T> &o) {
-  is_expanded_ = is_expanded_ && o.is_expanded();
+  is_expanded_ &= o.is_expanded();
   switch (o.kind()) {
     case ExpressionKind::Constant:
       constant_ += o.template to<ExpressionConstant>().value();
@@ -117,14 +117,14 @@ ExpressionAddFactory<T> &ExpressionAddFactory<T>::add(const T &constant,
                                                       const std::map<Expression<T>, T> &expr_to_coeff_map) {
   constant_ += constant;
   for (const auto &[e, c] : expr_to_coeff_map) {
-    is_expanded_ = is_expanded_ && e.is_expanded();
+    is_expanded_ &= e.is_expanded();
     expr_to_coeff_map_[e] += c;
   }
   return *this;
 }
 template <class T>
 ExpressionAddFactory<T> &ExpressionAddFactory<T>::add(const T &coeff, const Expression<T> &expr) {
-  is_expanded_ = is_expanded_ && expr.is_expanded();
+  is_expanded_ &= expr.is_expanded();
   expr_to_coeff_map_[expr] += coeff;
   return *this;
 }
@@ -215,7 +215,7 @@ ExpressionMulFactory<T> &ExpressionMulFactory<T>::operator*=(const std::shared_p
 template <class T>
 ExpressionMulFactory<T> &ExpressionMulFactory<T>::operator*=(const ExpressionCell<T> &o) {
   if (constant_ == 0) return *this;
-  is_expanded_ = is_expanded_ && o.is_expanded();
+  is_expanded_ &= o.is_expanded();
   switch (o.kind()) {
     case ExpressionKind::Constant:
       if (o.template to<ExpressionConstant>().value() == 0) {
@@ -264,14 +264,14 @@ ExpressionMulFactory<T> &ExpressionMulFactory<T>::multiply(
   }
   constant_ *= constant;
   for (const auto &[b, e] : base_to_exponent_map) {
-    is_expanded_ = is_expanded_ && e.is_expanded();
+    is_expanded_ &= e.is_expanded();
     base_to_exponent_map_[b] += e;
   }
   return *this;
 }
 template <class T>
 ExpressionMulFactory<T> &ExpressionMulFactory<T>::multiply(const Expression<T> &base, const Expression<T> &exponent) {
-  is_expanded_ = is_expanded_ && base.is_expanded() && exponent.is_expanded();
+  is_expanded_ &= base.is_expanded() && exponent.is_expanded();
   // The following assertion holds because of ExpressionMulFactory::AddExpression.
   if (base.is_pow() && exponent.is_constant()) {
     const Expression<T> &base_exponent = base.rhs();

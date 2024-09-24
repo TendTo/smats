@@ -27,4 +27,21 @@ bool is_integer(const double& v) {
   return modf(v, nullptr) == 0.0;
 }
 
+template <>
+int pow(const int& base, const int& exponent) {
+  return static_cast<int>(std::pow(base, exponent));
+}
+template <>
+long pow(const long& base, const long& exponent) {
+  return static_cast<long>(std::pow(base, exponent));
+}
+template <>
+float pow(const float& base, const float& exponent) {
+  return std::pow(base, exponent);
+}
+template <>
+double pow(const double& base, const double& exponent) {
+  return std::pow(base, exponent);
+}
+
 }  // namespace smats

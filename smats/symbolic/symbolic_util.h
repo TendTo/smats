@@ -22,4 +22,16 @@ namespace smats {
 template <class T>
 bool is_integer(const T& v);
 
+/**
+ * Helper function to evaluate the value of @p base raised to the power of @p exponent.
+ *
+ * It supports more types than std::pow.
+ * @tparam T type of the value
+ * @param base base value
+ * @param exponent exponent value
+ * @return the value of @p base raised to the power of @p exponent
+ */
+template <class T>
+T pow(const T& base, const T& exponent);
+
 }  // namespace smats
