@@ -71,19 +71,19 @@ class ExpressionCell : public std::enable_shared_from_this<ExpressionCell<T>> {
   virtual void hash(DelegatingHasher&) const = 0;
 
   /** @getter{variables, expression cell} */
-  [[nodiscard]] virtual Variables variables() const = 0;
+  [[nodiscard]] const Variables& variables() const;
+
+  /** @checker{polynomial, expression cell} */
+  [[nodiscard]] bool is_polynomial() const;
+
+  /** @checker{expanded, expression cell} */
+  [[nodiscard]] bool is_expanded() const { return is_expanded_; }
 
   /** @equal_to{expression cells} */
   [[nodiscard]] virtual bool equal_to(const ExpressionCell<T>& o) const = 0;
 
   /** @less{expression cells} */
   [[nodiscard]] virtual bool less(const ExpressionCell<T>& o) const = 0;
-
-  /** @checker{polynomial, expression cell} */
-  [[nodiscard]] bool is_polynomial() const { return is_polynomial_; }
-
-  /** @checker{expanded, expression cell} */
-  [[nodiscard]] bool is_expanded() const { return is_expanded_; }
 
   /** Sets this symbolic expression as already expanded. */
   void set_expanded() { is_expanded_ = true; }
@@ -117,9 +117,9 @@ class ExpressionCell : public std::enable_shared_from_this<ExpressionCell<T>> {
    * Create an Expression from this ExpressionCell.
    * @return Expression containing this ExpressionCell
    */
-  [[nodiscard]] Expression<T> to_expression() const { return Expression{
-   std::enable_shared_from_this<ExpressionCell<T>>::shared_from_this()
-  }; }
+  [[nodiscard]] Expression<T> to_expression() const {
+    return Expression{std::enable_shared_from_this<ExpressionCell<T>>::shared_from_this()};
+  }
 
   /**
    * Evaluates under a given environment (by default, an empty environment).
@@ -166,9 +166,23 @@ class ExpressionCell : public std::enable_shared_from_this<ExpressionCell<T>> {
    */
   virtual std::ostream& display(std::ostream& os) const = 0;
 
+  /**
+   * Invalidate the cached information.
+   *
+   * This will force the expression to recompute the cached information the next time they are requested.
+   * Must be called whenever the expression is modified.
+   */
+  void invalidate_cache();
+
  protected:
   /** Struct used to ensure that only subclasses can create instances of ExpressionCell. */
   struct Private {};
+  /**
+   * Constructs ExpressionCell of @p kind with @p is_expanded .
+   * @param kind kind of the expression
+   * @param is_expanded whether the expression is already expanded
+   */
+  ExpressionCell(ExpressionKind kind, bool is_expanded);
   /**
    * Constructs ExpressionCell of @p kind with @p is_polynomial and @p is_expanded .
    * @param kind kind of the expression
@@ -177,10 +191,14 @@ class ExpressionCell : public std::enable_shared_from_this<ExpressionCell<T>> {
    */
   ExpressionCell(ExpressionKind kind, bool is_polynomial, bool is_expanded);
 
+  virtual void compute_variables(std::optional<Variables>& variables) const = 0;
+  virtual void compute_is_polynomial(std::optional<bool>& is_polynomial) const = 0;
+
  private:
-  const ExpressionKind kind_;  ///< The kind of the expression.
-  const bool is_polynomial_;   ///< Whether the expression is a polynomial.
-  bool is_expanded_{false};    ///< Whether the expression is already expanded.
+  const ExpressionKind kind_;                   ///< The kind of the expression.
+  mutable std::optional<Variables> variables_;  ///< Cached variables in the expression.
+  mutable std::optional<bool> is_polynomial_;   ///< Cached information about whether the expression is a polynomial.
+  bool is_expanded_{false};                     ///< Whether the expression is already expanded.
 };
 
 /**
@@ -200,15 +218,17 @@ class ExpressionCell : public std::enable_shared_from_this<ExpressionCell<T>> {
 template <class T>
 class UnaryExpressionCell : public ExpressionCell<T> {
  public:
-  void hash(DelegatingHasher&) const override;
-  [[nodiscard]] Variables variables() const override;
-  [[nodiscard]] bool equal_to(const ExpressionCell<T>& o) const override;
-  [[nodiscard]] bool less(const ExpressionCell<T>& o) const override;
-  [[nodiscard]] T evaluate(const Environment<T>& env) const override;
   /** @getter{argument, unary expression} */
   [[nodiscard]] const Expression<T>& get_argument() const { return e_; }
 
  protected:
+  /**
+   * Construct a new UnaryExpressionCell of @p kind with @p e, @p is_polynomial, and @p is_expanded.
+   * @param kind kind of the expression
+   * @param e expression
+   * @param is_expanded whether the expression is already expanded
+   */
+  UnaryExpressionCell(ExpressionKind k, Expression<T> e, bool is_expanded);
   /**
    * Construct a new UnaryExpressionCell of @p kind with @p e, @p is_polynomial, and @p is_expanded.
    * @param kind kind of the expression
@@ -245,7 +265,6 @@ template <class T>
 class BinaryExpressionCell : public ExpressionCell<T> {
  public:
   void hash(DelegatingHasher& hasher) const override;
-  [[nodiscard]] Variables variables() const override;
   [[nodiscard]] bool equal_to(const ExpressionCell<T>& o) const override;
   [[nodiscard]] bool less(const ExpressionCell<T>& o) const override;
   [[nodiscard]] T evaluate(const Environment<T>& env) const override;
@@ -260,10 +279,9 @@ class BinaryExpressionCell : public ExpressionCell<T> {
    * @param kind kind of the expression
    * @param e1 first expression
    * @param e2 second expression
-   * @param is_polynomial whether the expression is a polynomial
    * @param is_expanded whether the expression is already expanded
    */
-  BinaryExpressionCell(ExpressionKind kind, Expression<T> e1, Expression<T> e2, bool is_polynomial, bool is_expanded);
+  BinaryExpressionCell(ExpressionKind kind, Expression<T> e1, Expression<T> e2, bool is_expanded);
   /**
    * Evaluate the binary expression, given the two values @p v1 and @p v2 of the arguments.
    * @param v1 first value
@@ -271,6 +289,9 @@ class BinaryExpressionCell : public ExpressionCell<T> {
    * @return evaluation result
    */
   [[nodiscard]] virtual T do_evaluate(const T& v1, const T& v2) const = 0;
+
+  void compute_variables(std::optional<Variables>& variables) const override;
+  void compute_is_polynomial(std::optional<bool>& is_polynomial) const override;
 
  private:
   const Expression<T> e1_;  ///< The first argument of the binary expression.
@@ -292,9 +313,8 @@ class ExpressionConstant : public ExpressionCell<T> {
 
   /** @getter{value, constant expression} */
   [[nodiscard]] const T& value() const { return value_; }
-  [[nodiscard]] T& m_value() { return const_cast<T&>(value_); }
-  /** @getter{variables, constant expression} */
-  [[nodiscard]] Variables variables() const override;
+  /** @getsetter{value, constant expression} */
+  T& m_value();
 
   void hash(DelegatingHasher& hasher) const override;
   [[nodiscard]] bool equal_to(const ExpressionCell<T>& o) const override;
@@ -309,6 +329,9 @@ class ExpressionConstant : public ExpressionCell<T> {
 
  private:
   const T value_;  ///< Constant value
+
+  void compute_variables(std::optional<Variables>& variables) const override;
+  void compute_is_polynomial(std::optional<bool>& is_polynomial) const override;
 };
 
 /**
@@ -326,8 +349,6 @@ class ExpressionVar : public ExpressionCell<T> {
 
   /** @getter{variable, variable expression} */
   [[nodiscard]] const Variable& variable() const { return var_; }
-  /** @getter{variables, variable expression} */
-  [[nodiscard]] Variables variables() const override;
 
   void hash(DelegatingHasher& hasher) const override;
   [[nodiscard]] bool equal_to(const ExpressionCell<T>& o) const override;
@@ -342,6 +363,9 @@ class ExpressionVar : public ExpressionCell<T> {
 
  private:
   const Variable var_;  ///< Variable contained in the Expression. Cannot be a Boolean variable
+
+  void compute_variables(std::optional<Variables>& variables) const override;
+  void compute_is_polynomial(std::optional<bool>& is_polynomial) const override;
 };
 
 /**
@@ -358,7 +382,6 @@ class ExpressionNaN : public ExpressionCell<T> {
   NEW_OPERATOR(ExpressionNaN);
 
   void hash(DelegatingHasher& hasher) const override;
-  [[nodiscard]] Variables variables() const override;
   [[nodiscard]] bool equal_to(const ExpressionCell<T>& o) const override;
   [[nodiscard]] bool less(const ExpressionCell<T>& o) const override;
   [[nodiscard]] T evaluate(const Environment<T>& env) const override;
@@ -367,6 +390,10 @@ class ExpressionNaN : public ExpressionCell<T> {
   [[nodiscard]] Expression<T> substitute(const Substitution<T>& s) const override;
   [[nodiscard]] Expression<T> differentiate(const Variable& x) const override;
   std::ostream& display(std::ostream& os) const override;
+
+ private:
+  void compute_variables(std::optional<Variables>& variables) const override;
+  void compute_is_polynomial(std::optional<bool>& is_polynomial) const override;
 };
 
 /**
@@ -391,7 +418,6 @@ class ExpressionAdd : public ExpressionCell<T> {
                       PARAMS(constant, expr_to_coeff_map));
 
   void hash(DelegatingHasher&) const override;
-  [[nodiscard]] Variables variables() const override;
   [[nodiscard]] bool equal_to(const ExpressionCell<T>& o) const override;
   [[nodiscard]] bool less(const ExpressionCell<T>& o) const override;
   [[nodiscard]] T evaluate(const Environment<T>& env) const override;
@@ -402,15 +428,22 @@ class ExpressionAdd : public ExpressionCell<T> {
   std::ostream& display(std::ostream& os) const override;
   /** @getter{constant, addition expression} */
   [[nodiscard]] const T& constant() const { return constant_; }
-  T& m_constant() { return const_cast<T&>(constant_); }
+  /** @getsetter{constant, addition expression} */
+  T& m_constant();
 
   /** @getter{map, addition expression} */
   [[nodiscard]] const ExpressionMap& expr_to_coeff_map() const { return expr_to_coeff_map_; }
   /** @getsetter{map, addition expression} */
-  ExpressionMap& m_expr_to_coeff_map() { return const_cast<ExpressionMap&>(expr_to_coeff_map_); }
+  ExpressionMap& m_expr_to_coeff_map();
 
  private:
   static Variables extract_variables(const ExpressionMap& expr_to_coeff_map);
+
+  const T constant_;                       ///< Constant term of the addition.
+  const ExpressionMap expr_to_coeff_map_;  ///< Map from expressions to their coefficients.
+
+  void compute_variables(std::optional<Variables>& variables) const override;
+  void compute_is_polynomial(std::optional<bool>& is_polynomial) const override;
   /**
    * Utility function used to display a single term in a pretty format.
    * @param os output stream
@@ -420,9 +453,6 @@ class ExpressionAdd : public ExpressionCell<T> {
    * @return updated output stream
    */
   std::ostream& display_term(std::ostream& os, bool print_plus, const T& coeff, const Expression<T>& term) const;
-
-  const T constant_;                       ///< Constant term of the addition.
-  const ExpressionMap expr_to_coeff_map_;  ///< Map from expressions to their coefficients.
 };
 
 /**
@@ -446,7 +476,6 @@ class ExpressionMul : public ExpressionCell<T> {
                       PARAMS(constant, expr_to_coeff_map));
 
   void hash(DelegatingHasher&) const override;
-  [[nodiscard]] Variables variables() const override;
   [[nodiscard]] bool equal_to(const ExpressionCell<T>& o) const override;
   [[nodiscard]] bool less(const ExpressionCell<T>& o) const override;
   [[nodiscard]] T evaluate(const Environment<T>& env) const override;
@@ -455,17 +484,25 @@ class ExpressionMul : public ExpressionCell<T> {
   [[nodiscard]] Expression<T> substitute(const Substitution<T>& s) const override;
   [[nodiscard]] Expression<T> differentiate(const Variable& x) const override;
   std::ostream& display(std::ostream& os) const override;
-  /** @getter{constant, addition expression} */
+  /** @getter{constant, multiplication expression} */
   [[nodiscard]] const T& constant() const { return constant_; }
-  T& m_constant() { return const_cast<T&>(constant_); }
+  /** @getsetter{constant, multiplication expression} */
+  T& m_constant();
 
   /** @getter{map, multiplication expression} */
   [[nodiscard]] const ExpressionMap& base_to_exponent_map() const { return base_to_exponent_map_; }
   /** @getsetter{map, multiplication expression} */
-  ExpressionMap& m_base_to_exponent_map() { return const_cast<ExpressionMap&>(base_to_exponent_map_); }
+  ExpressionMap& m_base_to_exponent_map();
 
  private:
   static Variables extract_variables(const ExpressionMap& base_to_exponent_map);
+
+  const T constant_;                          ///< Constant term of the multiplication.
+  const ExpressionMap base_to_exponent_map_;  ///< Map from expressions to their exponent.
+
+  void compute_variables(std::optional<Variables>& variables) const override;
+  void compute_is_polynomial(std::optional<bool>& is_polynomial) const override;
+
   /**
    * Utility function used to display a single term in a pretty format.
    * @param os output stream
@@ -476,9 +513,6 @@ class ExpressionMul : public ExpressionCell<T> {
    */
   std::ostream& display_term(std::ostream& os, bool print_mul, const Expression<T>& base,
                              const Expression<T>& exponent) const;
-
-  const T constant_;                          ///< Constant term of the multiplication.
-  const ExpressionMap base_to_exponent_map_;  ///< Map from expressions to their exponent.
 };
 
 /**
@@ -506,8 +540,10 @@ class ExpressionPow : public BinaryExpressionCell<T> {
   Expression<T> differentiate(const Variable& x) const override;
   std::ostream& display(std::ostream& os) const override;
 
- protected:
+ private:
   T do_evaluate(const T& v1, const T& v2) const override;
+
+  void compute_is_polynomial(std::optional<bool>& is_polynomial) const override;
 };
 
 /**
@@ -535,7 +571,7 @@ class ExpressionDiv : public BinaryExpressionCell<T> {
   Expression<T> differentiate(const Variable& x) const override;
   std::ostream& display(std::ostream& os) const override;
 
- protected:
+ private:
   T do_evaluate(const T& v1, const T& v2) const override;
 };
 

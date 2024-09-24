@@ -8,6 +8,7 @@
 #include <limits>
 #include <numeric>
 
+#include "smats/symbolic/expression_factory.h"
 #include "smats/symbolic/symbolic_util.h"
 #include "smats/util/error.h"
 
@@ -89,6 +90,8 @@ template <class T>
 Expression<T> expand_pow(const Expression<T>& base, const int n) {
   SMATS_ASSERT(base.equal_to(base.expand()), "base must be expanded");
   SMATS_ASSERT(n >= 1, "n must be greater than or equal to 1");
+  // pow(base, 0) = 1
+  if (n == 0) return Expression<T>::one();
   // pow(base, 1) = base
   if (n == 1) return base;
   const Expression pow_half{expand_pow(base, n / 2)};
@@ -96,8 +99,8 @@ Expression<T> expand_pow(const Expression<T>& base, const int n) {
   // pow(base, n) = base * pow(base, n / 2) * pow(base, n / 2)
   // else
   // pow(base, n) = pow(base, n / 2) * pow(base, n / 2)
-  return ((n & 1) == 1) ? expand_multiplication(expand_multiplication(base, pow_half), pow_half)
-                        : expand_multiplication(pow_half, pow_half);
+  return (n % 2 == 1) ? expand_multiplication(expand_multiplication(base, pow_half), pow_half)
+                      : expand_multiplication(pow_half, pow_half);
 }
 
 /**
@@ -115,15 +118,27 @@ template <class T>
 Expression<T> expand_pow(const Expression<T>& base, const Expression<T>& exponent) {
   SMATS_ASSERT(base.equal_to(base.expand()), "base must be expanded");
   SMATS_ASSERT(exponent.equal_to(exponent.expand()), "exponent must be expanded");
+  if (base.is_multiplication()) {
+    //   pow(c * ∏ᵢ pow(e₁ᵢ, e₂ᵢ), exponent)
+    // = pow(c, exponent) * ∏ᵢ pow(e₁ᵢ, e₂ᵢ * exponent)
+    const T& c = base.constant();
+    std::map<smats::Expression<T>, smats::Expression<T>> base_to_exponent_map{base.base_to_exponent_map()};
+    for (std::pair<const Expression<T>, Expression<T>>& p : base_to_exponent_map) {
+      p.second = p.second * exponent;
+    }
+    return (c ^ exponent) * ExpressionMulFactory<T>{1, std::move(base_to_exponent_map)}.consume();
+  }
+
   // Expand if
   //     1) base is an addition expression and
   //     2) exponent is a positive integer.
   if (!base.is_addition() || !exponent.is_constant()) return base ^ exponent;
 
-  const T& e = exponent.constant();
+  const T e{exponent.constant()};
   if (e <= 0 || !is_integer(e)) return base ^ exponent;
 
-  return expand_pow(base, static_cast<int>(e));
+  const int n{static_cast<int>(e)};
+  return expand_pow(base, n);
 }
 }  // namespace
 
@@ -131,55 +146,49 @@ Expression<T> expand_pow(const Expression<T>& base, const Expression<T>& exponen
  * ExpressionCell
  */
 template <class T>
+ExpressionCell<T>::ExpressionCell(const ExpressionKind kind, const bool is_expanded)
+    : kind_{kind}, variables_{std::nullopt}, is_polynomial_{std::nullopt}, is_expanded_{is_expanded} {}
+template <class T>
 ExpressionCell<T>::ExpressionCell(const ExpressionKind kind, const bool is_polynomial, const bool is_expanded)
-    : kind_{kind}, is_polynomial_{is_polynomial}, is_expanded_{is_expanded} {}
+    : kind_{kind}, variables_{std::nullopt}, is_polynomial_{is_polynomial}, is_expanded_{is_expanded} {}
+template <class T>
+const Variables& ExpressionCell<T>::variables() const {
+  if (!variables_.has_value()) compute_variables(variables_);
+  SMATS_ASSERT(variables_.has_value(), "variables_ must have a value by now");
+  return variables_.value();
+}
+template <class T>
+bool ExpressionCell<T>::is_polynomial() const {
+  if (!is_polynomial_.has_value()) compute_is_polynomial(is_polynomial_);
+  SMATS_ASSERT(is_polynomial_.has_value(), "is_polynomial_ must have a value by now");
+  return is_polynomial_.value();
+}
+template <class T>
+void ExpressionCell<T>::invalidate_cache() {
+  variables_.reset();
+  is_polynomial_.reset();
+}
 
 /**
  * UnaryExpressionCell
  */
 template <class T>
+UnaryExpressionCell<T>::UnaryExpressionCell(ExpressionKind kind, Expression<T> e, bool is_expanded)
+    : ExpressionCell<T>{kind, is_expanded}, e_{e} {}
+template <class T>
 UnaryExpressionCell<T>::UnaryExpressionCell(ExpressionKind kind, Expression<T> e, bool is_polynomial, bool is_expanded)
     : ExpressionCell<T>{kind, is_polynomial, is_expanded}, e_{e} {}
-template <class T>
-void UnaryExpressionCell<T>::hash(DelegatingHasher& hasher) const {
-  return e_.hash(hasher);
-}
-template <class T>
-Variables UnaryExpressionCell<T>::variables() const {
-  return e_.variables();
-}
-template <class T>
-bool UnaryExpressionCell<T>::equal_to(const ExpressionCell<T>& e) const {
-  SMATS_ASSERT(e.kind() == UnaryExpressionCell<T>::kind(), "Expressions must have the same kind");
-  const auto& unary_e = static_cast<const UnaryExpressionCell&>(e);
-  return e_.equal_to(unary_e.e_);
-}
-template <class T>
-bool UnaryExpressionCell<T>::less(const ExpressionCell<T>& e) const {
-  SMATS_ASSERT(e.kind() == UnaryExpressionCell<T>::kind(), "Expressions must have the same kind");
-  const auto& unary_e = static_cast<const UnaryExpressionCell&>(e);
-  return e_.less(unary_e.e_);
-}
-template <class T>
-T UnaryExpressionCell<T>::evaluate(const Environment<T>& env) const {
-  return e_.evaluate(env);
-}
 
 /**
  * BinaryExpressionCell
  */
 template <class T>
-BinaryExpressionCell<T>::BinaryExpressionCell(ExpressionKind kind, Expression<T> e1, Expression<T> e2,
-                                              bool is_polynomial, bool is_expanded)
-    : ExpressionCell<T>{kind, is_polynomial, is_expanded}, e1_{e1}, e2_{e2} {}
+BinaryExpressionCell<T>::BinaryExpressionCell(ExpressionKind kind, Expression<T> e1, Expression<T> e2, bool is_expanded)
+    : ExpressionCell<T>{kind, is_expanded}, e1_{e1}, e2_{e2} {}
 template <class T>
 void BinaryExpressionCell<T>::hash(DelegatingHasher& hasher) const {
   e1_.hash(hasher);
   e2_.hash(hasher);
-}
-template <class T>
-Variables BinaryExpressionCell<T>::variables() const {
-  return e1_.variables() + e2_.variables();
 }
 template <class T>
 bool BinaryExpressionCell<T>::equal_to(const ExpressionCell<T>& e) const {
@@ -197,6 +206,16 @@ template <class T>
 T BinaryExpressionCell<T>::evaluate(const Environment<T>& env) const {
   return do_evaluate(e1_.evaluate(env), e2_.evaluate(env));
 }
+template <class T>
+void BinaryExpressionCell<T>::compute_variables(std::optional<Variables>& variables) const {
+  SMATS_ASSERT(!variables.has_value(), "variables_ must not have a value yet");
+  variables = e1_.variables() + e2_.variables();
+}
+template <class T>
+void BinaryExpressionCell<T>::compute_is_polynomial(std::optional<bool>& is_polynomial) const {
+  SMATS_ASSERT(!is_polynomial.has_value(), "is_polynomial_ must not have a value yet");
+  is_polynomial = e1_.is_polynomial() && e2_.is_polynomial();
+}
 
 /**
  * ExpressionConstant
@@ -209,8 +228,14 @@ void ExpressionConstant<T>::hash(DelegatingHasher& hasher) const {
   hash_append(hasher, value_);
 }
 template <class T>
-Variables ExpressionConstant<T>::variables() const {
-  return Variables{};
+void ExpressionConstant<T>::compute_variables(std::optional<Variables>& variables) const {
+  SMATS_ASSERT(!variables.has_value(), "variables_ must not have a value yet");
+  variables = Variables{};
+}
+template <class T>
+void ExpressionConstant<T>::compute_is_polynomial(std::optional<bool>& is_polynomial) const {
+  SMATS_ASSERT(!is_polynomial.has_value(), "is_polynomial_ must not have a value yet");
+  is_polynomial = true;
 }
 template <class T>
 bool ExpressionConstant<T>::equal_to(const ExpressionCell<T>& o) const {
@@ -245,6 +270,11 @@ Expression<T> ExpressionConstant<T>::differentiate(const Variable& x) const {
   return Expression<T>::zero();
 }
 template <class T>
+T& ExpressionConstant<T>::m_value() {
+  ExpressionCell<T>::invalidate_cache();
+  return const_cast<T&>(value_);
+}
+template <class T>
 std::ostream& ExpressionConstant<T>::display(std::ostream& os) const {
   return os << value_;
 }
@@ -260,8 +290,14 @@ void ExpressionVar<T>::hash(DelegatingHasher& hasher) const {
   hash_append(hasher, var_);
 }
 template <class T>
-Variables ExpressionVar<T>::variables() const {
-  return Variables{var_};
+void ExpressionVar<T>::compute_variables(std::optional<Variables>& variables) const {
+  SMATS_ASSERT(!variables.has_value(), "variables_ must not have a value yet");
+  variables = Variables{var_};
+}
+template <class T>
+void ExpressionVar<T>::compute_is_polynomial(std::optional<bool>& is_polynomial) const {
+  SMATS_ASSERT(!is_polynomial.has_value(), "is_polynomial_ must not have a value yet");
+  is_polynomial = true;
 }
 template <class T>
 bool ExpressionVar<T>::equal_to(const ExpressionCell<T>& e) const {
@@ -312,8 +348,14 @@ void ExpressionNaN<T>::hash(DelegatingHasher& hasher) const {
   SMATS_RUNTIME_ERROR("Cannot compute hash of NaN expression");
 }
 template <class T>
-Variables ExpressionNaN<T>::variables() const {
-  return Variables{};
+void ExpressionNaN<T>::compute_variables(std::optional<Variables>& variables) const {
+  SMATS_ASSERT(!variables.has_value(), "variables_ must not have a value yet");
+  variables = Variables{};
+}
+template <class T>
+void ExpressionNaN<T>::compute_is_polynomial(std::optional<bool>& is_polynomial) const {
+  SMATS_ASSERT(!is_polynomial.has_value(), "is_polynomial_ must not have a value yet");
+  is_polynomial = true;
 }
 template <class T>
 bool ExpressionNaN<T>::equal_to(const ExpressionCell<T>& e) const {
@@ -355,7 +397,7 @@ std::ostream& ExpressionNaN<T>::display(std::ostream& os) const {
  */
 template <class T>
 ExpressionAdd<T>::ExpressionAdd(ExpressionCell<T>::Private, T constant, ExpressionMap expr_to_coeff_map)
-    : ExpressionCell<T>{ExpressionKind::Add, true, true},
+    : ExpressionCell<T>{ExpressionKind::Add, false},
       constant_{std::move(constant)},
       expr_to_coeff_map_{std::move(expr_to_coeff_map)} {}
 template <class T>
@@ -367,10 +409,16 @@ void ExpressionAdd<T>::hash(smats::DelegatingHasher& hasher) const {
   }
 }
 template <class T>
-Variables ExpressionAdd<T>::variables() const {
-  Variables vars;
-  for (const auto& [expr, _] : expr_to_coeff_map_) vars += expr.variables();
-  return vars;
+void ExpressionAdd<T>::compute_variables(std::optional<Variables>& variables) const {
+  SMATS_ASSERT(!variables.has_value(), "variables_ must not have a value yet");
+  variables = Variables{};
+  for (const auto& [expr, _] : expr_to_coeff_map_) variables.value() += expr.variables();
+}
+template <class T>
+void ExpressionAdd<T>::compute_is_polynomial(std::optional<bool>& is_polynomial) const {
+  SMATS_ASSERT(!is_polynomial.has_value(), "is_polynomial_ must not have a value yet");
+  is_polynomial = std::all_of(expr_to_coeff_map_.begin(), expr_to_coeff_map_.end(),
+                              [](const std::pair<Expression<T>, T>& el) { return el.first.is_polynomial(); });
 }
 template <class T>
 bool ExpressionAdd<T>::equal_to(const ExpressionCell<T>& o) const {
@@ -433,6 +481,16 @@ Variables ExpressionAdd<T>::extract_variables([[maybe_unused]] const ExpressionM
   SMATS_NOT_IMPLEMENTED();
 }
 template <class T>
+T& ExpressionAdd<T>::m_constant() {
+  ExpressionCell<T>::invalidate_cache();
+  return const_cast<T&>(constant_);
+}
+template <class T>
+ExpressionAdd<T>::ExpressionMap& ExpressionAdd<T>::m_expr_to_coeff_map() {
+  ExpressionCell<T>::invalidate_cache();
+  return const_cast<ExpressionMap&>(expr_to_coeff_map_);
+}
+template <class T>
 std::ostream& ExpressionAdd<T>::display(std::ostream& os) const {
   SMATS_ASSERT(!expr_to_coeff_map_.empty(), "ExpressionAdd must have at least one term");
   bool print_plus = false;
@@ -469,7 +527,7 @@ std::ostream& ExpressionAdd<T>::display_term(std::ostream& os, const bool print_
  */
 template <class T>
 ExpressionMul<T>::ExpressionMul(ExpressionCell<T>::Private, T constant, ExpressionMap base_to_exponent_map)
-    : ExpressionCell<T>{ExpressionKind::Mul, true, true},
+    : ExpressionCell<T>{ExpressionKind::Mul, false},
       constant_{std::move(constant)},
       base_to_exponent_map_{std::move(base_to_exponent_map)} {}
 template <class T>
@@ -481,10 +539,28 @@ void ExpressionMul<T>::hash(smats::DelegatingHasher& hasher) const {
   }
 }
 template <class T>
-Variables ExpressionMul<T>::variables() const {
-  Variables vars;
-  for (const auto& [expr, _] : base_to_exponent_map_) vars += expr.variables();
-  return vars;
+void ExpressionMul<T>::compute_variables(std::optional<Variables>& variables) const {
+  SMATS_ASSERT(!variables.has_value(), "variables_ must not have a value yet");
+  variables = Variables{};
+  for (const auto& [expr, _] : base_to_exponent_map_) variables.value() += expr.variables();
+}
+template <class T>
+void ExpressionMul<T>::compute_is_polynomial(std::optional<bool>& is_polynomial) const {
+  SMATS_ASSERT(!is_polynomial.has_value(), "is_polynomial_ must not have a value yet");
+  is_polynomial = std::all_of(base_to_exponent_map_.begin(), base_to_exponent_map_.end(),
+                              [](const std::pair<const Expression<T>, Expression<T>>& p) {
+                                // For each base^exponent, it has to satisfy the following
+                                // conditions:
+                                //     - base is polynomial-convertible.
+                                //     - exponent is a non-negative integer.
+                                const Expression<T>& base{p.first};
+                                const Expression<T>& exponent{p.second};
+                                if (!base.is_polynomial() || !exponent.is_constant()) {
+                                  return false;
+                                }
+                                const T& e{exponent.constant()};
+                                return e >= 0 && is_integer(e);
+                              });
 }
 template <class T>
 bool ExpressionMul<T>::equal_to(const ExpressionCell<T>& o) const {
@@ -558,6 +634,16 @@ Variables ExpressionMul<T>::extract_variables([[maybe_unused]] const ExpressionM
   SMATS_NOT_IMPLEMENTED();
 }
 template <class T>
+T& ExpressionMul<T>::m_constant() {
+  ExpressionCell<T>::invalidate_cache();
+  return const_cast<T&>(constant_);
+}
+template <class T>
+ExpressionMul<T>::ExpressionMap& ExpressionMul<T>::m_base_to_exponent_map() {
+  ExpressionCell<T>::invalidate_cache();
+  return const_cast<ExpressionMap&>(base_to_exponent_map_);
+}
+template <class T>
 std::ostream& ExpressionMul<T>::display(std::ostream& os) const {
   SMATS_ASSERT(!base_to_exponent_map_.empty(), "ExpressionMul must have at least one term");
   bool print_mul = false;
@@ -584,7 +670,20 @@ std::ostream& ExpressionMul<T>::display_term(std::ostream& os, const bool print_
  */
 template <class T>
 ExpressionPow<T>::ExpressionPow(ExpressionCell<T>::Private, const Expression<T>& base, const Expression<T>& exponent)
-    : BinaryExpressionCell<T>{ExpressionKind::Pow, base, exponent, true, true} {}
+    : BinaryExpressionCell<T>{ExpressionKind::Pow, base, exponent, base.is_leaf() && exponent.is_leaf()} {}
+template <class T>
+void ExpressionPow<T>::compute_is_polynomial(std::optional<bool>& is_polynomial) const {
+  SMATS_ASSERT(!is_polynomial.has_value(), "is_polynomial_ must not have a value yet");
+  // base ^ exponent is polynomial-convertible if the followings hold:
+  //    - base is polynomial-convertible.
+  //    - exponent is a non-negative integer.
+  if (!(BinaryExpressionCell<T>::lhs().is_polynomial() && BinaryExpressionCell<T>::rhs().is_constant())) {
+    is_polynomial = false;
+    return;
+  }
+  const T& e{BinaryExpressionCell<T>::rhs().constant()};
+  is_polynomial = e >= 0 && is_integer(e);
+}
 
 template <class T>
 Expression<T> ExpressionPow<T>::expand() const {
@@ -638,7 +737,7 @@ T ExpressionPow<T>::do_evaluate(const T& num, const T& den) const {
  */
 template <class T>
 ExpressionDiv<T>::ExpressionDiv(ExpressionCell<T>::Private, const Expression<T>& e1, const Expression<T>& e2)
-    : BinaryExpressionCell<T>{ExpressionKind::Div, e1, e2, e1.is_polynomial() && e2.is_constant(), false} {}
+    : BinaryExpressionCell<T>{ExpressionKind::Div, e1, e2, false} {}
 template <class T>
 Expression<T> ExpressionDiv<T>::expand() const {
   const Expression<T>& first = BinaryExpressionCell<T>::lhs();
@@ -671,7 +770,7 @@ Expression<T> ExpressionDiv<T>::differentiate(const Variable& x) const {
   return (f.differentiate(x) * g - f * g.differentiate(x)) / (g ^ 2);
 }
 template <class T>
-void  ExpressionDiv<T>::check_domain(const T& v1, const T& v2) {
+void ExpressionDiv<T>::check_domain(const T& v1, const T& v2) {
   SMATS_NOT_IMPLEMENTED();
 }
 template <class T>
