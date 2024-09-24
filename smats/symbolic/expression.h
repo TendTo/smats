@@ -351,6 +351,7 @@ class Expression {
 
   [[nodiscard]] const T& constant() const;
   [[nodiscard]] const std::map<Expression<T>, T>& expression_to_coeff_map() const;
+  [[nodiscard]] const std::map<Expression<T>, Expression<T>>& base_to_exponent_map() const;
   [[nodiscard]] const Expression<T>& lhs() const;
   [[nodiscard]] const Expression<T>& rhs() const;
 

@@ -127,6 +127,7 @@ ExpressionAddFactory<T> &ExpressionAddFactory<T>::negate() {
 }
 template <class T>
 Expression<T> ExpressionAddFactory<T>::build() const {
+  SMATS_ASSERT(!consumed_, "ExpressionAddFactory::build: already consumed");
   if (constant_ == 0 && expr_to_coeff_map_.empty()) return Expression<T>::zero();
   if (constant_ == 0 && expr_to_coeff_map_.size() == 1) {
     const auto &[e, c] = *expr_to_coeff_map_.begin();
@@ -136,6 +137,20 @@ Expression<T> ExpressionAddFactory<T>::build() const {
       return Expression<T>{ExpressionMul<T>::New(c, {{e, 1}})};
   }
   return Expression<T>{ExpressionAdd<T>::New(constant_, expr_to_coeff_map_)};
+}
+template <class T>
+Expression<T> ExpressionAddFactory<T>::consume() {
+  SMATS_ASSERT(!consumed_, "ExpressionAddFactory::consume: already consumed");
+  consumed_ = true;
+  if (constant_ == 0 && expr_to_coeff_map_.empty()) return Expression<T>::zero();
+  if (constant_ == 0 && expr_to_coeff_map_.size() == 1) {
+    const auto &[e, c] = *expr_to_coeff_map_.begin();
+    if (c == 1)
+      return e;
+    else
+      return Expression<T>{ExpressionMul<T>::New(c, {{e, 1}})};
+  }
+  return Expression<T>{ExpressionAdd<T>::New(std::move(constant_), std::move(expr_to_coeff_map_))};
 }
 
 /**
@@ -283,6 +298,7 @@ ExpressionMulFactory<T> &ExpressionMulFactory<T>::negate() {
 }
 template <class T>
 Expression<T> ExpressionMulFactory<T>::build() const {
+  SMATS_ASSERT(!consumed_, "ExpressionMulFactory::build: already consumed");
   if (constant_ == 0) return Expression<T>::zero();
   if (base_to_exponent_map_.empty()) return Expression<T>{constant_};
   if (constant_ == 1 && base_to_exponent_map_.size() == 1u) {
@@ -290,6 +306,18 @@ Expression<T> ExpressionMulFactory<T>::build() const {
     return exponent.is_constant(1) ? base : Expression<T>{ExpressionPow<T>::New(base, exponent)};
   }
   return Expression<T>{ExpressionMul<T>::New(constant_, base_to_exponent_map_)};
+}
+template <class T>
+Expression<T> ExpressionMulFactory<T>::consume() {
+  SMATS_ASSERT(!consumed_, "ExpressionMulFactory::consume: already consumed");
+  consumed_ = true;
+  if (constant_ == 0) return Expression<T>::zero();
+  if (base_to_exponent_map_.empty()) return Expression<T>{constant_};
+  if (constant_ == 1 && base_to_exponent_map_.size() == 1u) {
+    const auto &[base, exponent] = *base_to_exponent_map_.begin();
+    return exponent.is_constant(1) ? base : Expression<T>{ExpressionPow<T>::New(base, exponent)};
+  }
+  return Expression<T>{ExpressionMul<T>::New(std::move(constant_), std::move(base_to_exponent_map_))};
 }
 
 EXPLICIT_TEMPLATE_INSTANTIATION_NUMERIC(ExpressionAddFactory);

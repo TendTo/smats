@@ -43,8 +43,10 @@ class ExpressionAddFactory {
   ExpressionAddFactory<T> &negate();
 
   [[nodiscard]] Expression<T> build() const;
+  [[nodiscard]] Expression<T> consume();
 
  private:
+  bool consumed_{false};
   T constant_{0};
   ExpressionMap expr_to_coeff_map_;
 };
@@ -74,8 +76,10 @@ class ExpressionMulFactory {
   ExpressionMulFactory<T> &negate();
 
   [[nodiscard]] Expression<T> build() const;
+  Expression<T> consume();
 
  private:
+  bool consumed_{false};
   T constant_{1};
   ExpressionMap base_to_exponent_map_;
 };
