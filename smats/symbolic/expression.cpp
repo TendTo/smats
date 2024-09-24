@@ -107,6 +107,7 @@ bool Expression<T>::is_expanded() const {
 }
 template <class T>
 Expression<T> Expression<T>::expand() const {
+  if (is_expanded()) return *this;
   return cell_->expand();
 }
 template <class T>
@@ -147,6 +148,12 @@ const std::map<Expression<T>, T>& Expression<T>::expression_to_coeff_map() const
   SMATS_ASSERT(is_addition(), "Expression is not an addition");
   return cell_->template to<ExpressionAdd>().expr_to_coeff_map();
 }
+template <class T>
+const std::map<Expression<T>, Expression<T>>& Expression<T>::base_to_exponent_map() const {
+  SMATS_ASSERT(is_multiplication(), "Expression is not a multiplication");
+  return cell_->template to<ExpressionMul>().base_to_exponent_map();
+}
+
 template <class T>
 const Expression<T>& Expression<T>::lhs() const {
   switch (cell_->kind()) {
