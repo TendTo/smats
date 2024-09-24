@@ -47,6 +47,7 @@ class ExpressionAddFactory {
 
  private:
   bool consumed_{false};
+  bool is_expanded_{false};
   T constant_{0};
   ExpressionMap expr_to_coeff_map_;
 };
@@ -80,6 +81,7 @@ class ExpressionMulFactory {
 
  private:
   bool consumed_{false};
+  bool is_expanded_{false};
   T constant_{1};
   ExpressionMap base_to_exponent_map_;
 };

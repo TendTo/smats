@@ -18,14 +18,18 @@ namespace smats {
  */
 template <class T>
 ExpressionAddFactory<T>::ExpressionAddFactory(T constant, std::map<Expression<T>, T> expr_to_coeff_map)
-    : constant_{std::move(constant)}, expr_to_coeff_map_{std::move(expr_to_coeff_map)} {}
+    : consumed_{false},
+      is_expanded_{false},
+      constant_{std::move(constant)},
+      expr_to_coeff_map_{std::move(expr_to_coeff_map)} {}
 template <class T>
 ExpressionAddFactory<T>::ExpressionAddFactory(const Expression<T> &e) : ExpressionAddFactory{e.cell()} {}
 template <class T>
 ExpressionAddFactory<T>::ExpressionAddFactory(const std::shared_ptr<const ExpressionCell<T>> &e)
     : ExpressionAddFactory(*e) {}
 template <class T>
-ExpressionAddFactory<T>::ExpressionAddFactory(const ExpressionCell<T> &e) : constant_{}, expr_to_coeff_map_{} {
+ExpressionAddFactory<T>::ExpressionAddFactory(const ExpressionCell<T> &e)
+    : consumed_{false}, is_expanded_{e.is_expanded()}, constant_{}, expr_to_coeff_map_{} {
   switch (e.kind()) {
     case ExpressionKind::Constant:
       constant_ = e.template to<ExpressionConstant>().value();
@@ -62,6 +66,7 @@ ExpressionAddFactory<T> &ExpressionAddFactory<T>::operator+=(const std::shared_p
 }
 template <class T>
 ExpressionAddFactory<T> &ExpressionAddFactory<T>::operator+=(const ExpressionCell<T> &o) {
+  is_expanded_ = is_expanded_ && o.is_expanded();
   switch (o.kind()) {
     case ExpressionKind::Constant:
       constant_ += o.template to<ExpressionConstant>().value();
@@ -111,11 +116,15 @@ template <class T>
 ExpressionAddFactory<T> &ExpressionAddFactory<T>::add(const T &constant,
                                                       const std::map<Expression<T>, T> &expr_to_coeff_map) {
   constant_ += constant;
-  for (const auto &[e, c] : expr_to_coeff_map) expr_to_coeff_map_[e] += c;
+  for (const auto &[e, c] : expr_to_coeff_map) {
+    is_expanded_ = is_expanded_ && e.is_expanded();
+    expr_to_coeff_map_[e] += c;
+  }
   return *this;
 }
 template <class T>
 ExpressionAddFactory<T> &ExpressionAddFactory<T>::add(const T &coeff, const Expression<T> &expr) {
+  is_expanded_ = is_expanded_ && expr.is_expanded();
   expr_to_coeff_map_[expr] += coeff;
   return *this;
 }
@@ -131,12 +140,10 @@ Expression<T> ExpressionAddFactory<T>::build() const {
   if (constant_ == 0 && expr_to_coeff_map_.empty()) return Expression<T>::zero();
   if (constant_ == 0 && expr_to_coeff_map_.size() == 1) {
     const auto &[e, c] = *expr_to_coeff_map_.begin();
-    if (c == 1)
-      return e;
-    else
-      return Expression<T>{ExpressionMul<T>::New(c, {{e, 1}})};
+    if (c == 1) return e;
+    return Expression<T>{ExpressionMul<T>::New(c, {{e, 1}}), is_expanded_};
   }
-  return Expression<T>{ExpressionAdd<T>::New(constant_, expr_to_coeff_map_)};
+  return Expression<T>{ExpressionAdd<T>::New(std::move(constant_), std::move(expr_to_coeff_map_)), is_expanded_};
 }
 template <class T>
 Expression<T> ExpressionAddFactory<T>::consume() {
@@ -145,12 +152,10 @@ Expression<T> ExpressionAddFactory<T>::consume() {
   if (constant_ == 0 && expr_to_coeff_map_.empty()) return Expression<T>::zero();
   if (constant_ == 0 && expr_to_coeff_map_.size() == 1) {
     const auto &[e, c] = *expr_to_coeff_map_.begin();
-    if (c == 1)
-      return e;
-    else
-      return Expression<T>{ExpressionMul<T>::New(c, {{e, 1}})};
+    if (c == 1) return e;
+    return Expression<T>{ExpressionMul<T>::New(c, {{e, 1}}), is_expanded_};
   }
-  return Expression<T>{ExpressionAdd<T>::New(std::move(constant_), std::move(expr_to_coeff_map_))};
+  return Expression<T>{ExpressionAdd<T>::New(std::move(constant_), std::move(expr_to_coeff_map_)), is_expanded_};
 }
 
 /**
@@ -158,14 +163,18 @@ Expression<T> ExpressionAddFactory<T>::consume() {
  */
 template <class T>
 ExpressionMulFactory<T>::ExpressionMulFactory(T constant, std::map<Expression<T>, Expression<T>> expr_to_coeff_map)
-    : constant_{std::move(constant)}, base_to_exponent_map_{std::move(expr_to_coeff_map)} {}
+    : consumed_{false},
+      is_expanded_{false},
+      constant_{std::move(constant)},
+      base_to_exponent_map_{std::move(expr_to_coeff_map)} {}
 template <class T>
 ExpressionMulFactory<T>::ExpressionMulFactory(const Expression<T> &e) : ExpressionMulFactory{e.cell()} {}
 template <class T>
 ExpressionMulFactory<T>::ExpressionMulFactory(const std::shared_ptr<const ExpressionCell<T>> &e)
     : ExpressionMulFactory{*e} {}
 template <class T>
-ExpressionMulFactory<T>::ExpressionMulFactory(const ExpressionCell<T> &e) : constant_{1}, base_to_exponent_map_{} {
+ExpressionMulFactory<T>::ExpressionMulFactory(const ExpressionCell<T> &e)
+    : consumed_{false}, is_expanded_{e.is_expanded()}, constant_{1}, base_to_exponent_map_{} {
   switch (e.kind()) {
     case ExpressionKind::Constant:
       constant_ = e.template to<ExpressionConstant>().value();
@@ -206,6 +215,7 @@ ExpressionMulFactory<T> &ExpressionMulFactory<T>::operator*=(const std::shared_p
 template <class T>
 ExpressionMulFactory<T> &ExpressionMulFactory<T>::operator*=(const ExpressionCell<T> &o) {
   if (constant_ == 0) return *this;
+  is_expanded_ = is_expanded_ && o.is_expanded();
   switch (o.kind()) {
     case ExpressionKind::Constant:
       if (o.template to<ExpressionConstant>().value() == 0) {
@@ -253,11 +263,15 @@ ExpressionMulFactory<T> &ExpressionMulFactory<T>::multiply(
     return *this;
   }
   constant_ *= constant;
-  for (const auto &[b, e] : base_to_exponent_map) base_to_exponent_map_[b] += e;
+  for (const auto &[b, e] : base_to_exponent_map) {
+    is_expanded_ = is_expanded_ && e.is_expanded();
+    base_to_exponent_map_[b] += e;
+  }
   return *this;
 }
 template <class T>
 ExpressionMulFactory<T> &ExpressionMulFactory<T>::multiply(const Expression<T> &base, const Expression<T> &exponent) {
+  is_expanded_ = is_expanded_ && base.is_expanded() && exponent.is_expanded();
   // The following assertion holds because of ExpressionMulFactory::AddExpression.
   if (base.is_pow() && exponent.is_constant()) {
     const Expression<T> &base_exponent = base.rhs();
@@ -303,9 +317,9 @@ Expression<T> ExpressionMulFactory<T>::build() const {
   if (base_to_exponent_map_.empty()) return Expression<T>{constant_};
   if (constant_ == 1 && base_to_exponent_map_.size() == 1u) {
     const auto &[base, exponent] = *base_to_exponent_map_.begin();
-    return exponent.is_constant(1) ? base : Expression<T>{ExpressionPow<T>::New(base, exponent)};
+    return exponent.is_constant(1) ? base : Expression<T>{ExpressionPow<T>::New(base, exponent), is_expanded_};
   }
-  return Expression<T>{ExpressionMul<T>::New(constant_, base_to_exponent_map_)};
+  return Expression<T>{ExpressionMul<T>::New(constant_, base_to_exponent_map_), is_expanded_};
 }
 template <class T>
 Expression<T> ExpressionMulFactory<T>::consume() {
@@ -315,9 +329,9 @@ Expression<T> ExpressionMulFactory<T>::consume() {
   if (base_to_exponent_map_.empty()) return Expression<T>{constant_};
   if (constant_ == 1 && base_to_exponent_map_.size() == 1u) {
     const auto &[base, exponent] = *base_to_exponent_map_.begin();
-    return exponent.is_constant(1) ? base : Expression<T>{ExpressionPow<T>::New(base, exponent)};
+    return exponent.is_constant(1) ? base : Expression<T>{ExpressionPow<T>::New(base, exponent), is_expanded_};
   }
-  return Expression<T>{ExpressionMul<T>::New(std::move(constant_), std::move(base_to_exponent_map_))};
+  return Expression<T>{ExpressionMul<T>::New(std::move(constant_), std::move(base_to_exponent_map_)), is_expanded_};
 }
 
 EXPLICIT_TEMPLATE_INSTANTIATION_NUMERIC(ExpressionAddFactory);
