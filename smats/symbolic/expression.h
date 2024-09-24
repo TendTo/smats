@@ -326,6 +326,7 @@ class Expression {
 
   ARITHMETIC_OPERATORS(Expression<T>)
   GENERIC_ARITHMETIC_OPERATORS(Expression<T>, T&)
+  GENERIC_ARITHMETIC_OPERATORS(Expression<T>, Variable&)
   Expression<T> operator-() const;
   Expression<T>& operator++();
   Expression<T> operator++(int);
@@ -335,6 +336,7 @@ class Expression {
   Expression<T> operator^(const Expression<T>& o) const;
 
   // Cast functions which takes a pointer to a non-const Expression.
+  [[nodiscard]] bool is_leaf() const;
   [[nodiscard]] bool is_constant() const;
   [[nodiscard]] bool is_constant(const T& value) const;
   [[nodiscard]] bool is_variable() const;
@@ -359,7 +361,7 @@ class Expression {
   [[nodiscard]] long use_count() const { return cell_.use_count(); }
 
  private:
-  explicit Expression(const std::shared_ptr<const ExpressionCell<T>>& cell);
+  explicit Expression(const std::shared_ptr<const ExpressionCell<T>>& cell, bool is_expanded = false);
 
   /** @getter{underlying expression cell, expression} */
   [[nodiscard]] const ExpressionCell<T>& cell() const { return *cell_; }

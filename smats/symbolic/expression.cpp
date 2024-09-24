@@ -28,7 +28,9 @@ template <class T>
 Expression<T>::Expression(const Variable& var) : cell_{ExpressionVar<T>::New(var)} {}
 
 template <class T>
-Expression<T>::Expression(const std::shared_ptr<const ExpressionCell<T>>& cell) : cell_{cell} {}
+Expression<T>::Expression(const std::shared_ptr<const ExpressionCell<T>>& cell, const bool is_expanded) : cell_{cell} {
+  if (is_expanded && !cell_->is_expanded()) m_cell().set_expanded();
+}
 
 template <class T>
 ExpressionKind Expression<T>::kind() const {
@@ -56,6 +58,10 @@ bool Expression<T>::is_polynomial() const {
   return cell_->is_polynomial();
 }
 
+template <class T>
+bool Expression<T>::is_leaf() const {
+  return cell_->kind() == ExpressionKind::Constant || cell_->kind() == ExpressionKind::Var;
+}
 template <class T>
 bool Expression<T>::is_constant() const {
   return cell_->kind() == ExpressionKind::Constant;
@@ -108,7 +114,9 @@ bool Expression<T>::is_expanded() const {
 template <class T>
 Expression<T> Expression<T>::expand() const {
   if (is_expanded()) return *this;
-  return cell_->expand();
+  Expression<T> expanded{cell_->expand()};
+  expanded.m_cell().set_expanded();
+  return expanded;
 }
 template <class T>
 Expression<T> Expression<T>::substitute(const Variable& var, const Expression<T>& e) const {
@@ -319,6 +327,23 @@ Expression<T>& Expression<T>::operator/=(const T& o) {
     }
   }
   return *this *= Expression<T>{ExpressionDiv<T>::New(*this, o)};
+}
+
+template <class T>
+Expression<T>& Expression<T>::operator+=(const Variable& o) {
+  return *this += Expression{o};
+}
+template <class T>
+Expression<T>& Expression<T>::operator-=(const Variable& o) {
+  return *this -= Expression{o};
+}
+template <class T>
+Expression<T>& Expression<T>::operator*=(const Variable& o) {
+  return *this *= Expression{o};
+}
+template <class T>
+Expression<T>& Expression<T>::operator/=(const Variable& o) {
+  return *this /= Expression{o};
 }
 
 template <class T>
